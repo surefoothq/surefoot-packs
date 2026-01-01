@@ -1,13 +1,13 @@
-import { Component } from 'solid-js'
+import { Component, ComponentProps } from 'solid-js'
 import { cn } from '../lib/utils'
 import Icon from '../assets/images/icon.svg'
 
-const EmptyView: Component = () => (
+const EmptyView: Component<ComponentProps<'div'>> = (props) => (
   <div
     class={cn(
       'flex flex-col justify-center items-center gap-4',
-      'col-span-full row-span-full',
-      'bg-blue-500 text-white'
+      'bg-blue-500 text-white',
+      props.class
     )}
   >
     <img src={Icon} class="size-72 rounded-full" />

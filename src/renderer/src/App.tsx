@@ -1,16 +1,19 @@
-import type { Component } from 'solid-js'
+import { For, Show, type Component } from 'solid-js'
 import { SideMenu } from './components/SideMenu'
 import { PageControl } from './components/PageControl'
 import { EmptyView } from './components/EmptyView'
 import { ViewContainer } from './components/ViewContainer'
+import { Profile } from './components/Profile'
+import { store, closePage, setPage } from './store'
+import { useActiveProfiles } from './hooks/useActiveProfiles'
+import { usePage } from './hooks/usePage'
 
 const App: Component = () => {
-  const page = 0
-  const columns = 4
-  const rows = 1
-  const itemsPerPage = columns * rows
-  const pageCount = Math.ceil(1 / itemsPerPage)
-  const currentPage = Math.max(0, Math.min(page, pageCount - 1))
+  /* Active Profiles */
+  const activeProfiles = useActiveProfiles()
+
+  /* Pagination Logic */
+  const page = usePage(activeProfiles)
 
   return (
     <>
@@ -20,16 +23,21 @@ const App: Component = () => {
         <SideMenu />
 
         {/* Main Area */}
-        <ViewContainer currentPage={currentPage} rows={rows} columns={columns}>
-          <EmptyView />
+        <ViewContainer currentPage={page().currentPage} rows={store.rows} columns={store.columns}>
+          <Show
+            when={activeProfiles().length > 0}
+            fallback={<EmptyView class="col-span-full row-span-full" />}
+          >
+            <For each={activeProfiles()}>{(profile) => <Profile profile={profile} />}</For>
+          </Show>
         </ViewContainer>
 
         {/* Page Control */}
         <PageControl
-          currentPage={currentPage}
-          pageCount={pageCount}
-          closePage={() => null}
-          setPage={() => null}
+          currentPage={page().currentPage}
+          pageCount={page().pageCount}
+          closePage={closePage}
+          setPage={setPage}
         />
       </div>
     </>

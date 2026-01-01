@@ -1,19 +1,49 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, screen } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
+import __contextMenu, { Options } from 'electron-context-menu'
+import { Profile } from './Profile'
+
+const contextMenu =
+  (__contextMenu as unknown as { default: typeof __contextMenu }).default || __contextMenu
+
+/** Context Menu Dispose Map */
+const contextMenuMap = new Map<Electron.WebContents, () => void>()
+
+/** Profile Map */
+const profileMap = new Map<string, Profile>()
 
 class App {
   protected window: BrowserWindow | null = null
 
+  /* Constructor */
   constructor() {
     this.initialize()
+    this.createContextMenu()
   }
 
+  /** Create Context Menu */
+  createContextMenu(options?: Options): () => void {
+    return contextMenu({
+      showCopyImageAddress: true,
+      showSaveImageAs: true,
+      showCopyVideoAddress: true,
+      showSaveVideo: true,
+      showSaveVideoAs: true,
+      showCopyLink: true,
+      showSaveLinkAs: true,
+      showInspectElement: true,
+      ...options
+    })
+  }
+
+  /** Create Main Window */
   createWindow(): void {
+    const { width, height } = screen.getPrimaryDisplay().workAreaSize
     this.window = new BrowserWindow({
-      width: 900,
-      height: 670,
+      width,
+      height,
       show: false,
       autoHideMenuBar: true,
       ...(process.platform === 'linux' ? { icon } : {}),
@@ -26,7 +56,7 @@ class App {
     })
 
     this.window.on('ready-to-show', () => {
-      this.window!.show()
+      this.window!.maximize()
     })
 
     this.window.webContents.setWindowOpenHandler((details) => {
@@ -41,8 +71,41 @@ class App {
     } else {
       this.window.loadFile(join(__dirname, '../renderer/index.html'))
     }
+
+    // Clean up on window closed
+    this.window.on('closed', () => {
+      this.window = null
+      contextMenuMap.forEach((dispose, key) => {
+        dispose()
+        contextMenuMap.delete(key)
+      })
+    })
   }
 
+  /** Setup Profile */
+  async setupProfile(_ev: Electron.IpcMainInvokeEvent, id: string): Promise<void> {
+    if (!profileMap.has(id)) {
+      profileMap.set(id, new Profile({ id, ctx: this }))
+    }
+  }
+
+  /** Destroy Profile */
+  async destroyProfile(_ev: Electron.IpcMainInvokeEvent, id: string): Promise<void> {
+    if (profileMap.has(id)) {
+      profileMap.get(id)?.destroy()
+      profileMap.delete(id)
+    }
+  }
+
+  /** Register IPC Handlers */
+  registerIpcHandlers(): void {
+    // IPC test
+    ipcMain.on('ping', () => console.log('pong'))
+    ipcMain.handle('setup-profile', this.setupProfile.bind(this))
+    ipcMain.handle('destroy-profile', this.destroyProfile.bind(this))
+  }
+
+  /** Initialize Application */
   initialize(): void {
     // This method will be called when Electron has finished
     // initialization and is ready to create browser windows.
@@ -58,9 +121,7 @@ class App {
         optimizer.watchWindowShortcuts(window)
       })
 
-      // IPC test
-      ipcMain.on('ping', () => console.log('pong'))
-
+      this.registerIpcHandlers()
       this.createWindow()
 
       app.on('activate', () => {

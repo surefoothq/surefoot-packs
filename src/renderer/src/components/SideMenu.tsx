@@ -8,17 +8,18 @@ import {
   HiOutlineCog6Tooth
 } from 'solid-icons/hi'
 import { Component } from 'solid-js'
+import { ProfileListDialog } from './ProfileListDialog'
+
+/** Toggle FullScreen */
+const toggleFullScreen = (): void => {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen()
+  } else if (document.exitFullscreen) {
+    document.exitFullscreen()
+  }
+}
 
 const SideMenu: Component = () => {
-  /** Toggle FullScreen */
-  const toggleFullScreen = (): void => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen()
-    } else if (document.exitFullscreen) {
-      document.exitFullscreen()
-    }
-  }
-
   return (
     <div class="shrink-0 w-14 p-2 h-full flex flex-col gap-2 items-center">
       {/* Account List */}
@@ -26,6 +27,8 @@ const SideMenu: Component = () => {
         <Dialog.Trigger title="Accounts" class="p-2 cursor-pointer">
           <HiOutlineBars3 class="size-5 text-blue-500" />
         </Dialog.Trigger>
+
+        <ProfileListDialog />
       </Dialog.Root>
 
       {/* Settings */}
