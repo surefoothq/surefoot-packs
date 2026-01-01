@@ -14,6 +14,9 @@ importers:
       '@electron-toolkit/utils':
         specifier: ^4.0.0
         version: 4.0.0(electron@39.2.7)
+      '@fontsource/boldonse':
+        specifier: ^5.2.4
+        version: 5.2.4
       '@kobalte/core':
         specifier: ^0.13.11
         version: 0.13.11(solid-js@1.9.10)
@@ -642,6 +645,9 @@ packages:
 
   '@floating-ui/utils@0.2.10':
     resolution: {integrity: sha512-aGTxbpbg8/b5JfU1HXSrbH3wXZuLPJcNEcZQFMxLs3oSzgtVu6nFPkbbGGUvBcUjKV2YyB9Wxxabo+HEH9tcRQ==}
+
+  '@fontsource/boldonse@5.2.4':
+    resolution: {integrity: sha512-lQ1G54LKtnXDdmTY3F6TEnn3husTQ4EkAJcAfG8T/M98WZhG4stgvr8fA5drv/tbZP0ij+mU7iqtvqCjy4/JOQ==}
 
   '@gar/promisify@1.1.3':
     resolution: {integrity: sha512-k2Ty1JcVojjJFwrg/ThKi2ujJ7XNLYaFGNB/bWT9wGR+oSMJHMa5w+CUq6p/pVrKeNNgA7pCqEcjSnHVoqJQFw==}
@@ -3539,6 +3545,8 @@ snapshots:
       '@floating-ui/utils': 0.2.10
 
   '@floating-ui/utils@0.2.10': {}
+
+  '@fontsource/boldonse@5.2.4': {}
 
   '@gar/promisify@1.1.3': {}
 

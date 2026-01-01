@@ -23,6 +23,7 @@
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.2",
     "@electron-toolkit/utils": "^4.0.0",
+    "@fontsource/boldonse": "^5.2.4",
     "@kobalte/core": "^0.13.11",
     "@solid-primitives/storage": "^4.3.3",
     "axios": "^1.13.2",

@@ -1,1 +1,6 @@
+@import '@fontsource/boldonse/400';
 @import 'tailwindcss' source('../');
+
+@theme {
+  --font-boldonse: 'Boldonse', sans-serif;
+}
