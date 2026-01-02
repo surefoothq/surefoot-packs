@@ -13,6 +13,7 @@ const EmptyView: Component<ComponentProps<'div'>> = (props) => (
     <img src={Icon} class="size-72 rounded-full" />
     <h1 class="text-6xl font-boldonse">Packs</h1>
     <p class="font-boldonse">by Surefoot HQ</p>
+    {props.children}
   </div>
 )
 
