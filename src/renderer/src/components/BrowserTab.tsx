@@ -60,6 +60,22 @@ const BrowserTab: Component<BrowserTabProps> = (props) => {
   /** Address Bar Update */
   onMount(() => {
     const webview = webviewRef
+
+    /** DOM Ready */
+    webview.addEventListener('dom-ready', () => {
+      const webContentsId = webview.getWebContentsId()
+
+      /* Update Web Contents ID in Context */
+      context.updateWebContentsId(props.tab.id, webContentsId)
+
+      /* Notify Main Process that Tab is Ready */
+      window.electron.ipcRenderer.send('tab-ready', {
+        id: context.profile().id,
+        tabId: props.tab.id,
+        webContentsId: webContentsId
+      })
+    })
+
     /** Did Navigate */
     webview.addEventListener('did-navigate', (ev) => {
       addressBarRef.value = ev.url

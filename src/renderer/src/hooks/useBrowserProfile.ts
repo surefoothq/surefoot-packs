@@ -1,16 +1,14 @@
 import { uuid } from '@renderer/lib/utils'
-import { BrowserProfileContextType, BrowserProfileStore, Profile, Tab } from '@renderer/types'
-import { Accessor, batch, onCleanup, onMount } from 'solid-js'
+import {
+  BrowserProfileContextType,
+  BrowserProfileStore,
+  Profile,
+  ProfileConfig,
+  Tab
+} from '@renderer/types'
+import { Accessor, batch, createEffect, onCleanup, onMount } from 'solid-js'
 import { createStore } from 'solid-js/store'
 import { useWebviewNewWindow } from './useWebviewNewWindow'
-
-/** Get new tab */
-const getNewTab = (): Tab => ({
-  id: uuid(),
-  active: true,
-  title: 'New Tab',
-  url: import.meta.env.VITE_DEFAULT_WEBVIEW_URL
-})
 
 const useBrowserProfile = (profile: Accessor<Profile>): BrowserProfileContextType => {
   /* Container Ref */
@@ -18,15 +16,32 @@ const useBrowserProfile = (profile: Accessor<Profile>): BrowserProfileContextTyp
 
   /* Store */
   const [store, setStore] = createStore<BrowserProfileStore>({
+    config: {
+      newTabURL: import.meta.env.VITE_DEFAULT_WEBVIEW_URL
+    },
     ready: false,
     showAside: false,
     isDesktop: false,
-    tabs: [getNewTab()]
+    tabs: []
   })
+
+  /** Setup Profile */
+  const setupProfile = (config: ProfileConfig): void => {
+    batch(() => {
+      setConfig(config)
+      setReady(true)
+      addTab()
+    })
+  }
 
   /* Set Ready */
   const setReady = (ready: boolean): void => {
     setStore('ready', ready)
+  }
+
+  /* Set Config */
+  const setConfig = (config: Partial<ProfileConfig>): void => {
+    setStore('config', config)
   }
 
   /* Add Tab */
@@ -34,7 +49,13 @@ const useBrowserProfile = (profile: Accessor<Profile>): BrowserProfileContextTyp
     /* Add new active tab */
     batch(() => {
       setStore('tabs', { from: 0, to: store.tabs.length - 1 }, 'active', false)
-      setStore('tabs', store.tabs.length, newTab || getNewTab())
+      setStore('tabs', store.tabs.length, {
+        ...newTab,
+        title: newTab?.title || 'New Tab',
+        url: newTab?.url || store.config.newTabURL || import.meta.env.VITE_DEFAULT_WEBVIEW_URL,
+        id: newTab?.id || uuid(),
+        active: true
+      })
     })
   }
 
@@ -83,6 +104,11 @@ const useBrowserProfile = (profile: Accessor<Profile>): BrowserProfileContextTyp
     updateTab(tabId, { icon: icon[0] })
   }
 
+  /* Update WebContents ID */
+  const updateWebContentsId = (tabId: string, webContentsId: number): void => {
+    updateTab(tabId, { webContentsId })
+  }
+
   /* Set Container Ref */
   const setContainerRef = (el: HTMLElement | null): void => {
     containerRef = el
@@ -109,6 +135,15 @@ const useBrowserProfile = (profile: Accessor<Profile>): BrowserProfileContextTyp
     setStore('showAside', (prev) => !prev)
   }
 
+  /** Setup and Teardown */
+  createEffect(() => {
+    window.electron.ipcRenderer.invoke('setup-profile', profile().id).then(setupProfile)
+
+    onCleanup(() => {
+      window.electron.ipcRenderer.invoke('destroy-profile', profile().id)
+    })
+  })
+
   /* Monitor Fullscreen Changes */
   onMount(() => {
     const handleFullscreenChange = (): void =>
@@ -128,6 +163,7 @@ const useBrowserProfile = (profile: Accessor<Profile>): BrowserProfileContextTyp
     profile,
     store,
     setStore,
+    setConfig,
     setReady,
     getContainerRef,
     setContainerRef,
@@ -138,7 +174,8 @@ const useBrowserProfile = (profile: Accessor<Profile>): BrowserProfileContextTyp
     closeTab,
     updateTab,
     updateTitle,
-    updateIcon
+    updateIcon,
+    updateWebContentsId
   }
 }
 

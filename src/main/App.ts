@@ -1,41 +1,25 @@
-import { app, shell, BrowserWindow, ipcMain, screen } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, screen, session } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-import __contextMenu, { Options } from 'electron-context-menu'
 import { Profile } from './Profile'
-
-const contextMenu =
-  (__contextMenu as unknown as { default: typeof __contextMenu }).default || __contextMenu
-
-/** Context Menu Dispose Map */
-const contextMenuMap = new Map<Electron.WebContents, () => void>()
+import { ElectronChromeExtensions } from 'electron-chrome-extensions'
+import { buildChromeContextMenu } from 'electron-chrome-context-menu'
+import { ProfileConfig } from './types'
 
 /** Profile Map */
 const profileMap = new Map<string, Profile>()
 
 class App {
-  protected window: BrowserWindow | null = null
+  window: BrowserWindow | null = null
 
   /* Constructor */
   constructor() {
     this.initialize()
-    this.createContextMenu()
   }
 
-  /** Create Context Menu */
-  createContextMenu(options?: Options): () => void {
-    return contextMenu({
-      showCopyImageAddress: true,
-      showSaveImageAs: true,
-      showCopyVideoAddress: true,
-      showSaveVideo: true,
-      showSaveVideoAs: true,
-      showCopyLink: true,
-      showSaveLinkAs: true,
-      showInspectElement: true,
-      ...options
-    })
+  handleCRXProtocol(): void {
+    ElectronChromeExtensions.handleCRXProtocol(session.defaultSession)
   }
 
   /** Create Main Window */
@@ -53,6 +37,19 @@ class App {
         webviewTag: true,
         webSecurity: false
       }
+    })
+
+    /* Context Menu for WebContents */
+    this.window.webContents.on('context-menu', (_e, params) => {
+      const menu = buildChromeContextMenu({
+        params,
+        webContents: this.window!.webContents,
+        openLink: (url) => {
+          this.window!.webContents.loadURL(url)
+        }
+      })
+
+      menu.popup()
     })
 
     this.window.on('ready-to-show', () => {
@@ -75,22 +72,22 @@ class App {
     // Clean up on window closed
     this.window.on('closed', () => {
       this.window = null
-      contextMenuMap.forEach((dispose, key) => {
-        dispose()
-        contextMenuMap.delete(key)
-      })
     })
   }
 
   /** Setup Profile */
-  async setupProfile(_ev: Electron.IpcMainInvokeEvent, id: string): Promise<void> {
+  async setupProfile(_ev: Electron.IpcMainInvokeEvent, id: string): Promise<ProfileConfig> {
     if (!profileMap.has(id)) {
       profileMap.set(id, new Profile({ id, ctx: this }))
     }
+
+    return profileMap.get(id)!.initialize()
   }
 
   /** Destroy Profile */
   async destroyProfile(_ev: Electron.IpcMainInvokeEvent, id: string): Promise<void> {
+    // TODO: Optimize destroy profile
+    return
     if (profileMap.has(id)) {
       profileMap.get(id)?.destroy()
       profileMap.delete(id)
@@ -122,6 +119,7 @@ class App {
       })
 
       this.registerIpcHandlers()
+      this.handleCRXProtocol()
       this.createWindow()
 
       app.on('activate', () => {

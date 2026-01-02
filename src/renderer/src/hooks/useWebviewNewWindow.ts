@@ -14,27 +14,26 @@ const useWebviewNewWindow = (profile: Accessor<Profile>, addTab: (tab: Tab) => v
       }
     ): void => {
       const { id, action, data } = args
+
       if (id === profile().id) {
         switch (action) {
+          case 'create-tab':
+            console.log('Creating new tab with data:', data)
+            addTab(data)
+            break
           case 'open-window':
             console.log('Opening new window with data:', data)
-            addTab({
-              ...data,
-              id: crypto.randomUUID(),
-              active: true
-            })
+            addTab(data)
             break
         }
       }
     }
 
     /** Add Listener */
-    window.electron.ipcRenderer.on('browser-message', listener)
+    const destroy = window.electron.ipcRenderer.on('browser-message', listener)
 
-    onCleanup(() => {
-      /** Remove Listener */
-      window.electron.ipcRenderer.removeListener('browser-message', listener)
-    })
+    /** Cleanup */
+    onCleanup(destroy)
   })
 }
 
