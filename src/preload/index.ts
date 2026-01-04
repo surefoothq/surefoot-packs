@@ -1,6 +1,6 @@
 import { contextBridge } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
-import { injectBrowserAction } from 'electron-chrome-extensions/browser-action'
+import { exposeBrowserActionIpc } from 'electron-chrome-extensions/browser-action'
 // Custom APIs for renderer
 const api = {}
 
@@ -21,4 +21,4 @@ if (process.contextIsolated) {
   window.api = api
 }
 
-injectBrowserAction()
+exposeBrowserActionIpc()
