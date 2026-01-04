@@ -15,7 +15,7 @@ const ViewContainer: Component<ViewContainerProps> = (props) => (
         'h-full grid grid-cols-(--grid-cols) auto-rows-(--auto-rows)',
         '-translate-y-(--current-page)',
         'transition-transform duration-500',
-        'divide-x dark:divide-neutral-700'
+        'divide-x dark:divide-slate-700'
       )}
       style={{
         '--current-page': `${props.currentPage * 100}%`,

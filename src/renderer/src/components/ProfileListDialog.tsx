@@ -25,7 +25,7 @@ const ProfileListDialog: Component = () => {
         class={cn(
           'fixed inset-y-0 left-0',
           'w-5/6 max-w-xs',
-          'bg-white dark:bg-neutral-800',
+          'bg-white dark:bg-slate-800',
           'flex flex-col'
         )}
       >
@@ -37,7 +37,7 @@ const ProfileListDialog: Component = () => {
               >
                 Profiles ({profiles.length})
               </Dialog.Title>
-              <Dialog.Description class="text-neutral-500 dark:text-neutral-400 leading-none">
+              <Dialog.Description class="text-slate-500 dark:text-slate-400 leading-none">
                 Select a profile
               </Dialog.Description>
             </div>

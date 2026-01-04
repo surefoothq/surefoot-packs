@@ -4,7 +4,7 @@ import { SetStoreFunction } from 'solid-js/store'
 declare module 'solid-js' {
   namespace JSX {
     interface IntrinsicElements {
-      'browser-action-list': { partition?: string; alignment?: string; tab?: string }
+      'browser-action-list': { partition?: string; alignment?: string; tab?: string | number }
     }
   }
 }
@@ -46,6 +46,7 @@ export interface BrowserProfileStore {
 export interface BrowserProfileContextType {
   profile: Accessor<Profile>
   store: BrowserProfileStore
+  activeTab: Accessor<Tab | undefined>
   setStore: SetStoreFunction<BrowserProfileStore>
   setConfig: (config: Partial<ProfileConfig>) => void
   setReady: (ready: boolean) => void
@@ -58,6 +59,8 @@ export interface BrowserProfileContextType {
   addTab: () => void
   updateTab: (tabId: string, updates: Partial<Tab>) => void
   updateTitle: (tabId: string, title: string) => void
-  updateIcon: (tabId: string, icon: string[]) => void
+  updateIcon: (tabId: string, icon?: string) => void
   updateWebContentsId: (tabId: string, webContentsId: number) => void
+  sendIpc: (channel: string, ...args: unknown[]) => void
+  invokeIpc: (channel: string, ...args: unknown[]) => Promise<unknown>
 }

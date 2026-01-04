@@ -34,7 +34,7 @@ const BrowserTabButtonList: Component = () => {
       )}
     >
       {/* Main */}
-      <div class="sticky left-0 py-1 px-2 bg-white z-1 dark:bg-neutral-800 shrink-0">
+      <div class="sticky left-0 py-1 px-2 bg-white z-1 dark:bg-slate-800 shrink-0">
         <WebviewButton onClick={() => context.addTab()}>
           <HiOutlinePlus class="size-4" />
         </WebviewButton>

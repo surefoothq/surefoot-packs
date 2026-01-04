@@ -21,10 +21,10 @@ const PageControl: Component<PageControlProps> = (props) => (
               props.currentPage === pageIndex()
                 ? [
                     'border-blue-500 bg-blue-100 text-blue-500',
-                    'dark:bg-neutral-700 dark:text-blue-500',
+                    'dark:bg-slate-700 dark:text-blue-500',
                     'font-bold'
                   ]
-                : 'bg-neutral-100 dark:bg-neutral-700'
+                : 'bg-slate-100 dark:bg-slate-700'
             )}
             onClick={() => props.setPage(pageIndex())}
           >
@@ -35,9 +35,9 @@ const PageControl: Component<PageControlProps> = (props) => (
           <button
             class={cn(
               'p-2 rounded-xl border border-transparent',
-              'bg-neutral-100 dark:bg-neutral-700',
+              'bg-slate-100 dark:bg-slate-700',
               'hover:bg-blue-100 hover:text-blue-500',
-              'dark:hover:bg-neutral-600'
+              'dark:hover:bg-slate-600'
             )}
             onClick={() => props.closePage(pageIndex())}
           >

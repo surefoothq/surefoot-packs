@@ -19,6 +19,7 @@ class Profile {
   extensions!: ElectronChromeExtensions
   ready: boolean = false
   newTabExtension: Electron.Extension | null = null
+  readyPromise: Promise<ProfileConfig> | null = null
 
   /* Constructor */
   constructor({ id, ctx }: { id: string; ctx: App }) {
@@ -28,6 +29,8 @@ class Profile {
 
     /* Bind Methods */
     this.configureWebContents = this.configureWebContents.bind(this)
+    this.handleCRXProtocol = this.handleCRXProtocol.bind(this)
+    this.setActiveTab = this.setActiveTab.bind(this)
   }
 
   /** Get Host WebContents */
@@ -79,6 +82,7 @@ class Profile {
 
       /* If WebView, add to extensions */
       if (contents.getType() === 'webview') {
+        /* Add Tab to Extensions */
         this.extensions.addTab(contents, this.ctx.window!)
       }
     }
@@ -100,16 +104,26 @@ class Profile {
 
   /** Initialize Profile */
   async initialize(): Promise<ProfileConfig> {
-    if (this.ready) {
-      return {
-        newTabURL: this.getNewTabURL()
-      }
+    if (!this.readyPromise) {
+      this.readyPromise = this.setup()
     }
+    return this.readyPromise
+  }
 
-    this.ready = true
+  /** Setup Profile */
+  async setup(): Promise<ProfileConfig> {
     console.log(`Initializing profile: ${this.id}`)
+
+    /* Configure WebContents */
     app.on('web-contents-created', this.configureWebContents)
+
+    /* Register IPC Listeners */
+    this.registerIPCListeners()
+
+    /* Handle CRX Protocol */
     this.handleCRXProtocol()
+
+    /* Setup extensions */
     this.setupExtensions()
 
     /* Install Chrome Web Store */
@@ -127,6 +141,24 @@ class Profile {
     return {
       newTabURL: this.getNewTabURL()
     }
+  }
+
+  /** Set Active Tab */
+  setActiveTab(_event: Electron.IpcMainEvent, webContentsId: number): void {
+    const contents = webContents.fromId(webContentsId) as Electron.WebContents
+    if (!contents.isDestroyed()) {
+      this.extensions.selectTab(contents)
+    }
+  }
+
+  /** Build IPC Event Name */
+  event(channel: string): string {
+    return `${channel}-${this.id}`
+  }
+
+  /** Register IPC Listeners */
+  registerIPCListeners(): void {
+    ipcMain.on(this.event('tab-active'), this.setActiveTab)
   }
 
   /** Load New Tab Page */
@@ -195,13 +227,13 @@ class Profile {
         args: { id: string; tabId: string; webContentsId: number }
       ): void => {
         if (args.id === this.id && args.tabId === tabId) {
-          ipcMain.off('tab-ready', tabReadyListener)
+          ipcMain.off('tab-ready-' + this.id, tabReadyListener)
           resolve(webContents.fromId(args.webContentsId)!)
         }
       }
 
       /* Listen for Tab Ready */
-      ipcMain.on('tab-ready', tabReadyListener)
+      ipcMain.on('tab-ready-' + this.id, tabReadyListener)
 
       /* Send Message to Create Tab */
       this.getHostWebContents().send('browser-message', {

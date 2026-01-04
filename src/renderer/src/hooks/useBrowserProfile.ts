@@ -1,4 +1,4 @@
-import { uuid } from '@renderer/lib/utils'
+import { Accessor, batch, createEffect, createMemo, onCleanup, onMount } from 'solid-js'
 import {
   BrowserProfileContextType,
   BrowserProfileStore,
@@ -6,8 +6,9 @@ import {
   ProfileConfig,
   Tab
 } from '@renderer/types'
-import { Accessor, batch, createEffect, onCleanup, onMount } from 'solid-js'
 import { createStore } from 'solid-js/store'
+import { uuid } from '@renderer/lib/utils'
+
 import { useWebviewNewWindow } from './useWebviewNewWindow'
 
 const useBrowserProfile = (profile: Accessor<Profile>): BrowserProfileContextType => {
@@ -25,6 +26,8 @@ const useBrowserProfile = (profile: Accessor<Profile>): BrowserProfileContextTyp
     tabs: []
   })
 
+  const activeTab = createMemo(() => store.tabs.find((tab) => tab.active))
+
   /** Setup Profile */
   const setupProfile = (config: ProfileConfig): void => {
     batch(() => {
@@ -33,6 +36,13 @@ const useBrowserProfile = (profile: Accessor<Profile>): BrowserProfileContextTyp
       addTab()
     })
   }
+
+  /* Send IPC */
+  const sendIpc = (channel: string, ...args: unknown[]): void =>
+    window.electron.ipcRenderer.send(channel + profile().id, ...args)
+
+  const invokeIpc = (channel: string, ...args: unknown[]): Promise<unknown> =>
+    window.electron.ipcRenderer.invoke(channel + profile().id, ...args)
 
   /* Set Ready */
   const setReady = (ready: boolean): void => {
@@ -65,6 +75,11 @@ const useBrowserProfile = (profile: Accessor<Profile>): BrowserProfileContextTyp
       const index = store.tabs.findIndex((tab) => tab.id === tabId)
       setStore('tabs', { from: 0, to: store.tabs.length - 1 }, 'active', false)
       setStore('tabs', index, 'active', true)
+
+      const tab = store.tabs[index]
+      if (tab) {
+        console.log('Set active tab:', tab)
+      }
     })
   }
 
@@ -99,14 +114,21 @@ const useBrowserProfile = (profile: Accessor<Profile>): BrowserProfileContextTyp
   }
 
   /* Update Icon */
-  const updateIcon = (tabId: string, icon: string[]): void => {
+  const updateIcon = (tabId: string, icon?: string): void => {
     console.log('Updating icon for tab:', tabId, icon)
-    updateTab(tabId, { icon: icon[0] })
+    updateTab(tabId, { icon })
   }
 
   /* Update WebContents ID */
   const updateWebContentsId = (tabId: string, webContentsId: number): void => {
+    /* Update Tab */
     updateTab(tabId, { webContentsId })
+
+    /* Notify Main Process that Tab is Ready */
+    sendIpc('tab-ready', {
+      tabId: tabId,
+      webContentsId: webContentsId
+    })
   }
 
   /* Set Container Ref */
@@ -162,6 +184,7 @@ const useBrowserProfile = (profile: Accessor<Profile>): BrowserProfileContextTyp
   return {
     profile,
     store,
+    activeTab,
     setStore,
     setConfig,
     setReady,
@@ -175,7 +198,9 @@ const useBrowserProfile = (profile: Accessor<Profile>): BrowserProfileContextTyp
     updateTab,
     updateTitle,
     updateIcon,
-    updateWebContentsId
+    updateWebContentsId,
+    sendIpc,
+    invokeIpc
   }
 }
 

@@ -5,7 +5,7 @@ const WebviewButton: Component<ComponentProps<'button'>> = (props) => (
   <button
     {...props}
     class={cn(
-      'bg-neutral-100 dark:bg-neutral-700',
+      'bg-slate-100 dark:bg-slate-700',
       'hover:bg-blue-100 hover:text-blue-500',
       'dark:hover:bg-blue-200',
       'flex items-center justify-center',

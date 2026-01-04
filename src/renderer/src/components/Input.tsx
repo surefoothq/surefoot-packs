@@ -8,7 +8,7 @@ const Input: Component<ComponentProps<'input'>> = (props) => (
       'bg-transparent w-full',
       'p-2.5 font-bold grow min-h-0 min-w-0',
       'focus:outline-hidden focus:border-blue-300',
-      'border border-neutral-700',
+      'border border-slate-700',
       'disabled:opacity-50',
       props.class
     )}

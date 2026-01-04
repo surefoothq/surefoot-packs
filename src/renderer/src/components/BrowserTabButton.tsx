@@ -41,7 +41,7 @@ const BrowserTabButton: Component<BrowserTabButtonProps> = (props) => {
       ref={ref}
       onClick={handleTabButtonClick}
       class={cn(
-        props.tab.active && 'bg-neutral-100 dark:bg-neutral-700',
+        props.tab.active && 'bg-slate-100 dark:bg-slate-700',
         'p-1.5 rounded-full shrink-0',
         'flex gap-2 items-center',
         'cursor-pointer'
@@ -59,7 +59,7 @@ const BrowserTabButton: Component<BrowserTabButtonProps> = (props) => {
         class={cn(
           'p-1 rounded-full cursor-pointer',
           'flex items-center justify-center',
-          props.tab.active && 'bg-neutral-200 dark:bg-neutral-600'
+          props.tab.active && 'bg-slate-200 dark:bg-slate-600'
         )}
       >
         <HiOutlineXMark class="size-4" />

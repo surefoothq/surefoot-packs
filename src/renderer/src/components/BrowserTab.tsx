@@ -1,19 +1,19 @@
 import isUrl from 'is-url'
 import normalizeUrl from 'normalize-url'
-
-import { Input } from './Input'
-import { WebviewButton } from './WebviewButton'
-import { cn } from '../lib/utils'
 import { Component, createEffect, onCleanup, onMount } from 'solid-js'
-import { Tab } from '@renderer/types'
-import { useBrowserProfileContext } from '@renderer/hooks/useBrowserProfileContext'
 import {
   HiOutlineArrowLeft,
   HiOutlineArrowPath,
   HiOutlineArrowRight,
   HiOutlineXMark
 } from 'solid-icons/hi'
+import { Tab } from '@renderer/types'
+import { useBrowserProfileContext } from '@renderer/hooks/useBrowserProfileContext'
 import { useWebviewControls } from '@renderer/hooks/useWebviewControls'
+
+import { Input } from './Input'
+import { WebviewButton } from './WebviewButton'
+import { cn } from '../lib/utils'
 
 interface BrowserTabProps {
   index: number
@@ -57,24 +57,28 @@ const BrowserTab: Component<BrowserTabProps> = (props) => {
       )
     })
   }
-  /** Address Bar Update */
+
+  /** Tab Ready */
+  const tabReady = (): void => {
+    const webview = webviewRef
+    const webContentsId = webview.getWebContentsId()
+
+    /* Debug */
+    console.log('Webview DOM Ready:', { tabId: props.tab.id, webContentsId })
+
+    /* Update Web Contents ID in Context */
+    context.updateWebContentsId(props.tab.id, webContentsId)
+
+    /* Remove Listener */
+    webview.removeEventListener('dom-ready', tabReady)
+  }
+
+  /** On Mount */
   onMount(() => {
     const webview = webviewRef
 
     /** DOM Ready */
-    webview.addEventListener('dom-ready', () => {
-      const webContentsId = webview.getWebContentsId()
-
-      /* Update Web Contents ID in Context */
-      context.updateWebContentsId(props.tab.id, webContentsId)
-
-      /* Notify Main Process that Tab is Ready */
-      window.electron.ipcRenderer.send('tab-ready', {
-        id: context.profile().id,
-        tabId: props.tab.id,
-        webContentsId: webContentsId
-      })
-    })
+    webview.addEventListener('dom-ready', tabReady)
 
     /** Did Navigate */
     webview.addEventListener('did-navigate', (ev) => {
@@ -85,6 +89,13 @@ const BrowserTab: Component<BrowserTabProps> = (props) => {
     webview.addEventListener('did-navigate-in-page', (ev) => {
       addressBarRef.value = ev.url
     })
+  })
+
+  /** Handle Tab Active */
+  createEffect(() => {
+    if (props.tab.active && props.tab.webContentsId) {
+      context.sendIpc('tab-active', props.tab.webContentsId)
+    }
   })
 
   /** Handle Window Close */
@@ -114,7 +125,11 @@ const BrowserTab: Component<BrowserTabProps> = (props) => {
 
     /** Handle Favicons */
     const handleFavicons = (ev: Electron.PageFaviconUpdatedEvent): void => {
-      context.updateIcon(props.tab.id, ev.favicons)
+      const img = new Image()
+
+      img.onload = () => context.updateIcon(props.tab.id, img.src)
+      img.onerror = () => context.updateIcon(props.tab.id)
+      img.src = ev.favicons[0]
     }
 
     /** Update Title */
@@ -132,8 +147,17 @@ const BrowserTab: Component<BrowserTabProps> = (props) => {
     })
   })
 
+  createEffect(() => {
+    console.log('Rendering BrowserTab:', {
+      index: props.index,
+      tab: props.tab,
+      active: props.tab.active,
+      webContentsId: props.tab.webContentsId
+    })
+  })
+
   return (
-    <div class={cn('grow flex flex-col shrink-0', 'divide-y dark:divide-neutral-700')}>
+    <div class={cn('grow flex flex-col shrink-0', 'divide-y dark:divide-slate-700')}>
       <div class="p-2 flex gap-1 items-center">
         <div class="flex gap-1">
           {/* Back */}
