@@ -1,11 +1,11 @@
-import { app, ipcMain, session, webContents } from 'electron'
-import App from './App'
 import { ElectronChromeExtensions } from 'electron-chrome-extensions'
+import { app, ipcMain, session, webContents } from 'electron'
 import { buildChromeContextMenu } from 'electron-chrome-context-menu'
-
 import { installChromeWebStore } from 'electron-chrome-web-store'
 import { is } from '@electron-toolkit/utils'
 import { join } from 'path'
+
+import App from './App'
 import type { ProfileConfig } from './types'
 
 const PATHS = {
