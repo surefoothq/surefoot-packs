@@ -1,9 +1,9 @@
-import { Component } from 'solid-js'
-
-import { cn } from './lib/utils'
-import Icon from './assets/images/icon.svg'
 import isUrl from 'is-url'
 import normalizeUrl from 'normalize-url'
+import { Component } from 'solid-js'
+
+import Icon from './assets/images/icon.svg'
+import { cn } from './lib/utils'
 
 /** New Tab Component */
 const NewTab: Component = () => {
@@ -17,7 +17,7 @@ const NewTab: Component = () => {
       ? url
       : `https://www.google.com/search?q=${encodeURIComponent(query || '')}`
 
-    window.electron.ipcRenderer.send('new-tab-navigate', finalUrl)
+    location.href = finalUrl
   }
 
   return (
