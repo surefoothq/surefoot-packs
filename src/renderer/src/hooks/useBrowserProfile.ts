@@ -39,10 +39,10 @@ const useBrowserProfile = (profile: Accessor<Profile>): BrowserProfileContextTyp
 
   /* Send IPC */
   const sendIpc = (channel: string, ...args: unknown[]): void =>
-    window.electron.ipcRenderer.send(channel + profile().id, ...args)
+    window.electron.ipcRenderer.send(`${channel}-${profile().id}`, ...args)
 
   const invokeIpc = (channel: string, ...args: unknown[]): Promise<unknown> =>
-    window.electron.ipcRenderer.invoke(channel + profile().id, ...args)
+    window.electron.ipcRenderer.invoke(`${channel}-${profile().id}`, ...args)
 
   /* Set Ready */
   const setReady = (ready: boolean): void => {
@@ -61,6 +61,7 @@ const useBrowserProfile = (profile: Accessor<Profile>): BrowserProfileContextTyp
       setStore('tabs', { from: 0, to: store.tabs.length - 1 }, 'active', false)
       setStore('tabs', store.tabs.length, {
         ...newTab,
+        type: newTab?.type || 'normal',
         title: newTab?.title || 'New Tab',
         url: newTab?.url || store.config.newTabURL || import.meta.env.VITE_DEFAULT_WEBVIEW_URL,
         id: newTab?.id || uuid(),
@@ -124,10 +125,14 @@ const useBrowserProfile = (profile: Accessor<Profile>): BrowserProfileContextTyp
     /* Update Tab */
     updateTab(tabId, { webContentsId })
 
+    /* Get Tab */
+    const tab = store.tabs.find((t) => t.id === tabId)
+
     /* Notify Main Process that Tab is Ready */
     sendIpc('tab-ready', {
       tabId: tabId,
-      webContentsId: webContentsId
+      webContentsId: webContentsId,
+      type: tab?.type || 'normal'
     })
   }
 

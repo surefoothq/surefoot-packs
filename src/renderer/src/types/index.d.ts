@@ -31,6 +31,7 @@ export interface Tab {
   active: boolean
   title: string
   url: string
+  type?: 'normal' | 'popup' | 'panel'
   icon?: string
   webContentsId?: number
 }

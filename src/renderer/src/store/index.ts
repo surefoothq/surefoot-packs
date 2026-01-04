@@ -1,6 +1,8 @@
-import { AppStore, Profile } from '../types'
 import { createStore } from 'solid-js/store'
 import { makePersisted } from '@solid-primitives/storage'
+
+import { AppStore, Profile } from '../types'
+import { storage } from './storage'
 
 /* Initial Store */
 const [initialStore, initialSetStore] = createStore<AppStore>({
@@ -12,7 +14,8 @@ const [initialStore, initialSetStore] = createStore<AppStore>({
 
 /* Persisted Store */
 const [store, setStore] = makePersisted([initialStore, initialSetStore], {
-  name: 'app-store'
+  name: 'app-store',
+  storage
 })
 
 /* Add Profile */

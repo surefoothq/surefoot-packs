@@ -73,6 +73,11 @@ const BrowserTab: Component<BrowserTabProps> = (props) => {
     webview.removeEventListener('dom-ready', tabReady)
   }
 
+  /** Listen for Window Close */
+  const closeTab = (): void => {
+    context.closeTab(props.tab.id)
+  }
+
   /** On Mount */
   onMount(() => {
     const webview = webviewRef
@@ -93,7 +98,7 @@ const BrowserTab: Component<BrowserTabProps> = (props) => {
 
   /** Handle Tab Active */
   createEffect(() => {
-    if (props.tab.active && props.tab.webContentsId) {
+    if (props.tab.active && props.tab.webContentsId && props.tab.type === 'normal') {
       context.sendIpc('tab-active', props.tab.webContentsId)
     }
   })
@@ -102,16 +107,11 @@ const BrowserTab: Component<BrowserTabProps> = (props) => {
   createEffect(() => {
     const webview = webviewRef
 
-    /** Listen for Window Close */
-    const listener = (): void => {
-      context.closeTab(props.tab.id)
-    }
-
     /** Listen For Close */
-    webview.addEventListener('close', listener)
+    webview.addEventListener('close', closeTab)
 
     /* Cleanup */
-    onCleanup(() => webview.removeEventListener('close', listener))
+    onCleanup(() => webview.removeEventListener('close', closeTab))
   })
 
   /** Favicon and Title */

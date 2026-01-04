@@ -31,6 +31,7 @@ class Profile {
     this.configureWebContents = this.configureWebContents.bind(this)
     this.handleCRXProtocol = this.handleCRXProtocol.bind(this)
     this.setActiveTab = this.setActiveTab.bind(this)
+    this.addTab = this.addTab.bind(this)
   }
 
   /** Get Host WebContents */
@@ -79,12 +80,6 @@ class Profile {
           }
         }
       })
-
-      /* If WebView, add to extensions */
-      if (contents.getType() === 'webview') {
-        /* Add Tab to Extensions */
-        this.extensions.addTab(contents, this.ctx.window!)
-      }
     }
   }
 
@@ -151,6 +146,20 @@ class Profile {
     }
   }
 
+  /** Add Tab */
+  addTab = (
+    _event: Electron.IpcMainEvent,
+    args: { tabId: string; webContentsId: number; type?: 'normal' | 'popup' | 'panel' }
+  ): void => {
+    console.log('==========================================')
+    console.log('Adding tab for profile:', this.id, args)
+
+    const contents = webContents.fromId(args.webContentsId) as Electron.WebContents
+    if (args.type === 'normal') {
+      this.extensions.addTab(contents, this.ctx.window!)
+    }
+  }
+
   /** Build IPC Event Name */
   event(channel: string): string {
     return `${channel}-${this.id}`
@@ -158,6 +167,7 @@ class Profile {
 
   /** Register IPC Listeners */
   registerIPCListeners(): void {
+    ipcMain.on(this.event('tab-ready'), this.addTab)
     ipcMain.on(this.event('tab-active'), this.setActiveTab)
   }
 
@@ -208,15 +218,23 @@ class Profile {
         console.log('==========================================')
         if (!details.tabId) {
           const urls = Array.isArray(details.url) ? details.url : [details.url || '']
-          await Promise.all(urls.map((url) => this.createTab({ url })))
+          await Promise.all(urls.map((url) => this.createTab({ url, type: details.type })))
         }
         return this.ctx.window!
+      },
+
+      /* Open Popup  */
+      openPopup: async (_extensionId, url): Promise<Electron.WebContents> => {
+        return await this.createTab({ url, type: 'popup' })
       }
     })
   }
 
   /** Create Tab */
-  createTab(details: { url?: string }): Promise<Electron.WebContents> {
+  createTab(details: {
+    url?: string
+    type?: 'normal' | 'popup' | 'panel'
+  }): Promise<Electron.WebContents> {
     return new Promise((resolve) => {
       /* Generate Tab ID */
       const tabId = crypto.randomUUID()
@@ -227,13 +245,13 @@ class Profile {
         args: { id: string; tabId: string; webContentsId: number }
       ): void => {
         if (args.id === this.id && args.tabId === tabId) {
-          ipcMain.off('tab-ready-' + this.id, tabReadyListener)
+          ipcMain.off(this.event('tab-ready'), tabReadyListener)
           resolve(webContents.fromId(args.webContentsId)!)
         }
       }
 
       /* Listen for Tab Ready */
-      ipcMain.on('tab-ready-' + this.id, tabReadyListener)
+      ipcMain.on(this.event('tab-ready'), tabReadyListener)
 
       /* Send Message to Create Tab */
       this.getHostWebContents().send('browser-message', {

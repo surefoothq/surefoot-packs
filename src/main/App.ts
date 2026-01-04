@@ -1,10 +1,12 @@
-import { app, shell, BrowserWindow, ipcMain, screen, session } from 'electron'
-import { join } from 'path'
-import { electronApp, optimizer, is } from '@electron-toolkit/utils'
-import icon from '../../resources/icon.png?asset'
-import { Profile } from './Profile'
+import { BrowserWindow, app, ipcMain, screen, session, shell } from 'electron'
+import { Conf } from 'electron-conf/main'
 import { ElectronChromeExtensions } from 'electron-chrome-extensions'
 import { buildChromeContextMenu } from 'electron-chrome-context-menu'
+import { electronApp, is, optimizer } from '@electron-toolkit/utils'
+import { join } from 'path'
+
+import icon from '../../resources/icon.png?asset'
+import { Profile } from './Profile'
 import { ProfileConfig } from './types'
 
 /** Profile Map */
@@ -102,6 +104,10 @@ class App {
     ipcMain.handle('destroy-profile', this.destroyProfile.bind(this))
   }
 
+  setupConfig(): void {
+    new Conf().registerRendererListener()
+  }
+
   /** Initialize Application */
   initialize(): void {
     // This method will be called when Electron has finished
@@ -118,6 +124,7 @@ class App {
         optimizer.watchWindowShortcuts(window)
       })
 
+      this.setupConfig()
       this.registerIpcHandlers()
       this.handleCRXProtocol()
       this.createWindow()

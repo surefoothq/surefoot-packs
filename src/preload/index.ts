@@ -1,6 +1,11 @@
 import { contextBridge } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 import { exposeBrowserActionIpc } from 'electron-chrome-extensions/browser-action'
+import { exposeConf } from 'electron-conf/preload'
+
+/** Expose Conf */
+exposeConf()
+
 // Custom APIs for renderer
 const api = {}
 
