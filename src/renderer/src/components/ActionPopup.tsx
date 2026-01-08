@@ -1,4 +1,4 @@
-import { Component } from 'solid-js'
+import { Component, onMount } from 'solid-js'
 import { Dialog } from '@kobalte/core'
 import { cn } from '@renderer/lib/utils'
 import { useBrowserProfileContext } from '@renderer/hooks/useBrowserProfileContext'
@@ -10,8 +10,22 @@ const ActionPopup: Component = () => {
   const context = useBrowserProfileContext()
   const action = context.action()!
 
+  let webviewRef!: Electron.WebviewTag
+
+  onMount(() => {
+    const webview = webviewRef
+    webview.addEventListener('dom-ready', () => {
+      webview.setZoomFactor(0.9)
+    })
+  })
+
   return (
-    <Dialog.Root open onOpenChange={() => context.sendIpc('remove-tab', action.id)}>
+    <Dialog.Root
+      open
+      modal={false}
+      preventScroll={false}
+      onOpenChange={() => context.sendIpc('remove-tab', action.id)}
+    >
       <Dialog.Overlay class="absolute inset-0 bg-black/50 z-10" />
       <Dialog.Content
         class={cn(
@@ -26,7 +40,7 @@ const ActionPopup: Component = () => {
           <Dialog.Title class="font-bold">{action.title}</Dialog.Title>
           <Dialog.Description class="sr-only">{action.title}</Dialog.Description>
         </div>
-        <BrowserWebview tab={action} src={action.url} />
+        <BrowserWebview tab={action} src={action.url} ref={webviewRef} />
       </Dialog.Content>
     </Dialog.Root>
   )
