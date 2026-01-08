@@ -190,10 +190,14 @@ class Profile {
     _event: Electron.IpcMainEvent,
     details: chrome.tabs.CreateProperties
   ): Promise<void> {
-    const window = this.focusedWindow!
-    const tab = await window.tabs.create(details)
-    this.extensions.addTab(tab, window.window)
-    this.extensions.selectTab(tab)
+    if (this.focusedWindow) {
+      const window = this.focusedWindow
+      const tab = await window.tabs.create(details)
+      this.extensions.addTab(tab, window.window)
+      this.extensions.selectTab(tab)
+    } else {
+      await this.createInitialWindow()
+    }
   }
 
   /** Handle Select Tab */
