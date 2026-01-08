@@ -181,16 +181,18 @@ class Profile {
 
   /** Create Initial Window */
   createInitialWindow(): Promise<TabbedBrowserWindow> {
-    return this.createWindow({ url: this.getNewTabURL(), type: 'normal' })
+    return this.createWindow({ url: this.getNewTabURL() })
   }
 
   /** Create Window */
   async createWindow(details: CreateWindowData): Promise<TabbedBrowserWindow> {
-    const window = new TabbedBrowserWindow(this, details.type)
+    const window = new TabbedBrowserWindow(this, details.type === 'action' ? 'action' : 'normal')
     this.windows.push(window)
 
     /* Focus Window */
-    this.focusedWindow = window
+    if (window.type !== 'action') {
+      this.focusedWindow = window
+    }
 
     /* Set URL(s) */
     details.url = details.url || this.getNewTabURL()
@@ -236,9 +238,7 @@ class Profile {
       const tab = window.tabs.getById(id)
       if (tab) {
         this.focusedWindow = window
-        if (window.type === 'normal') {
-          this.extensions.selectTab(tab)
-        }
+        this.extensions.selectTab(tab)
         window.tabs.select(tab)
       }
     }
@@ -379,16 +379,13 @@ class Profile {
     this.windows = this.windows.filter((win) => win !== window)
     this.sendMessageToHost('remove-window', { id: window.window.id })
 
-    if (this.focusedWindow === window) {
+    if (this.focusedWindow === window && window.type !== 'popup') {
       this.focusedWindow = this.windows.find((win) => win.type !== 'action') || null
 
       if (this.focusedWindow) {
         const tab = this.focusedWindow.tabs.getAll()[0]
         if (tab) {
-          if (this.focusedWindow.type === 'normal') {
-            this.extensions.selectTab(tab)
-          }
-
+          this.extensions.selectTab(tab)
           this.focusedWindow.tabs.select(tab)
         }
       }
