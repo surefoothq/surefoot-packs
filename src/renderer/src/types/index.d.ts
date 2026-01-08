@@ -34,6 +34,7 @@ export interface Tab {
   selected: boolean
   title: string
   url: string
+  initialUrl: string
   icon?: string
   webContentsId?: number
   windowType: 'normal' | 'popup' | 'panel' | 'action'

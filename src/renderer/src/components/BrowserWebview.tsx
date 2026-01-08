@@ -1,15 +1,15 @@
 import {} from 'solid-icons/hi'
-
 import {} from './Input'
 import {} from './WebviewButton'
-
-import { Component, ComponentProps, createEffect, onCleanup, onMount, splitProps } from 'solid-js'
+import { Component, createEffect, onCleanup, onMount } from 'solid-js'
 import { Tab } from '@renderer/types'
 import { cn } from '@renderer/lib/utils'
 import { useBrowserProfileContext } from '@renderer/hooks/useBrowserProfileContext'
 
-interface BrowserWebviewProps extends ComponentProps<'webview'> {
+interface BrowserWebviewProps {
   tab: Tab
+  ref?: (ref: Electron.WebviewTag) => void
+  class?: string
 }
 
 const BrowserWebview: Component<BrowserWebviewProps> = (props) => {
@@ -22,48 +22,49 @@ const BrowserWebview: Component<BrowserWebviewProps> = (props) => {
   /* Get Webview */
   const getWebview = (): Electron.WebviewTag => webviewRef
 
-  const [local, others] = splitProps(props, ['tab'])
-
   /** Tab Ready */
   const tabReady = (): void => {
     const webview = getWebview()
     const webContentsId = webview.getWebContentsId()
-
     /* Debug */
-    console.log('Webview DOM Ready:', { tabId: local.tab.id, webContentsId })
-
-    /* Update Web Contents ID in Context */
-    context.updateWebContentsId(local.tab.id, webContentsId)
+    console.log('Webview DOM Ready:', { tabId: props.tab.id, webContentsId })
 
     /* Remove Listener */
     webview.removeEventListener('dom-ready', tabReady)
+
+    /* Update Web Contents ID in Context */
+    context.updateWebContentsId(props.tab.id, webContentsId)
   }
 
   /** Listen for Window Close */
   const closeTab = (): void => {
-    context.closeTab(local.tab.id)
+    context.closeTab(props.tab.id)
   }
 
   /** Handle Page Title */
   const handlePageTitle = (ev: Electron.PageTitleUpdatedEvent): void => {
-    context.updateTitle(local.tab.id, ev.title)
+    context.updateTitle(props.tab.id, ev.title)
   }
 
   /** Handle Favicons */
   const handleFavicons = (ev: Electron.PageFaviconUpdatedEvent): void => {
     const img = new Image()
 
-    img.onload = () => context.updateIcon(local.tab.id, img.src)
-    img.onerror = () => context.updateIcon(local.tab.id)
+    img.onload = () => context.updateIcon(props.tab.id, img.src)
+    img.onerror = () => context.updateIcon(props.tab.id)
     img.src = ev.favicons[0]
+  }
+
+  /** Set Webview Ref */
+  const setWebviewRef = (ref: Electron.WebviewTag): void => {
+    webviewRef = ref
+    props.ref?.(webviewRef)
   }
 
   /** On Mount */
   onMount(() => {
+    /* Get Webview */
     const webview = getWebview()
-
-    /** Pass Ref to Parent */
-    props.ref && typeof props.ref === 'function' && props.ref(webview)
 
     /** DOM Ready */
     webview.addEventListener('dom-ready', tabReady)
@@ -101,11 +102,11 @@ const BrowserWebview: Component<BrowserWebviewProps> = (props) => {
 
   return (
     <webview
-      {...others}
+      src={props.tab.initialUrl}
       allowpopups={true}
       class={cn('grow', props.class)}
       partition={`persist:profile-${context.profile().id}`}
-      ref={webviewRef}
+      ref={(webviewRef) => setWebviewRef(webviewRef as Electron.WebviewTag)}
     />
   )
 }

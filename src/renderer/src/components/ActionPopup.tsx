@@ -40,7 +40,7 @@ const ActionPopup: Component = () => {
           <Dialog.Title class="font-bold">{action.title}</Dialog.Title>
           <Dialog.Description class="sr-only">{action.title}</Dialog.Description>
         </div>
-        <BrowserWebview tab={action} src={action.url} ref={webviewRef} />
+        <BrowserWebview tab={action} ref={(webview) => (webviewRef = webview)} />
       </Dialog.Content>
     </Dialog.Root>
   )

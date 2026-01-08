@@ -40,7 +40,7 @@ const BrowserTab: Component<BrowserTabProps> = (props) => {
       </Show>
 
       {/* Webview */}
-      <BrowserWebview tab={props.tab} src={props.tab.url} ref={webviewRef} />
+      <BrowserWebview tab={props.tab} ref={(webview) => (webviewRef = webview)} />
     </div>
   )
 }

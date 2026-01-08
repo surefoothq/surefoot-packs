@@ -76,11 +76,14 @@ const useBrowserProfile = (profile: Accessor<Profile>): BrowserProfileContextTyp
       if (newTab?.windowType !== 'action') {
         setStore('tabs', { from: 0, to: store.tabs.length - 1 }, 'active', false)
       }
+
+      const url = newTab?.url || store.config.newTabURL || import.meta.env.VITE_DEFAULT_WEBVIEW_URL
       setStore('tabs', store.tabs.length, {
         ...newTab,
         title: newTab?.title || 'New Tab',
-        url: newTab?.url || store.config.newTabURL || import.meta.env.VITE_DEFAULT_WEBVIEW_URL,
-        active: newTab?.windowType !== 'action'
+        active: newTab?.windowType !== 'action',
+        initialUrl: url,
+        url: url
       })
     })
   }

@@ -1,3 +1,5 @@
+import {} from '@renderer/hooks/useBrowserProfileContext'
+
 import isUrl from 'is-url'
 import normalizeUrl from 'normalize-url'
 import { Component } from 'solid-js'
@@ -5,8 +7,8 @@ import { HiOutlineArrowLeft, HiOutlineArrowRight } from 'solid-icons/hi'
 import { HiOutlineArrowPath, HiOutlineXMark } from 'solid-icons/hi'
 import { Tab } from '@renderer/types'
 import { onMount } from 'solid-js'
-import {} from '@renderer/hooks/useBrowserProfileContext'
 import { useWebviewControls } from '@renderer/hooks/useWebviewControls'
+
 import { Input } from './Input'
 import { WebviewButton } from './WebviewButton'
 
