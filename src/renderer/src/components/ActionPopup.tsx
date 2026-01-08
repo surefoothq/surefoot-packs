@@ -17,7 +17,7 @@ const ActionPopup: Component = () => {
         class={cn(
           'absolute bottom-0 z-20',
           'flex flex-col',
-          'h-4/5 w-full rounded-t-xl overflow-clip',
+          'h-11/12 w-full rounded-t-xl overflow-clip',
           'bg-slate-800'
         )}
       >
