@@ -53,6 +53,7 @@ class Tabs {
   async create(details: chrome.tabs.CreateProperties): Promise<Electron.WebContents> {
     const tab = await this.createFromHost(details)
     this.list.push(tab)
+    this.selected = tab
 
     return tab
   }

@@ -41,9 +41,47 @@ class Profile {
     this.handleCRXProtocol = this.handleCRXProtocol.bind(this)
   }
 
+  /** Build IPC Channel Name */
+  ipcChannel(channel: string): string {
+    return `${channel}-${this.id}`
+  }
+
   /** Get Host WebContents */
   getHostWebContents(): Electron.WebContents {
     return this.ctx.window!.webContents
+  }
+
+  getWindowFromBaseWindow(baseWindow: Electron.BaseWindow): TabbedBrowserWindow | null {
+    return this.windows.find((win) => win.window.id === baseWindow.id) || null
+  }
+
+  getWindowFromWebContents(contents: Electron.WebContents): TabbedBrowserWindow | null {
+    return this.windows.find((win) => win.tabs.get(contents)) || null
+  }
+
+  getWindowFromTabId(tabId: number): TabbedBrowserWindow | null {
+    return this.windows.find((win) => win.tabs.getById(tabId)) || null
+  }
+
+  getFocusedWindow(): TabbedBrowserWindow | null {
+    return this.focusedWindow
+  }
+
+  getCurrentWindow(): TabbedBrowserWindow {
+    const focusedWindow = this.getFocusedWindow()
+    if (focusedWindow && focusedWindow.type !== 'action') {
+      return focusedWindow
+    }
+
+    let window = this.windows.find((win) => win.type === 'normal')
+
+    if (!window) {
+      window = new TabbedBrowserWindow(this, 'normal')
+      this.windows.push(window)
+    }
+    this.focusedWindow = window
+
+    return window
   }
 
   /** Configure WebContents */
@@ -150,6 +188,8 @@ class Profile {
   async createWindow(details: CreateWindowData): Promise<TabbedBrowserWindow> {
     const window = new TabbedBrowserWindow(this, details.type)
     this.windows.push(window)
+
+    /* Focus Window */
     this.focusedWindow = window
 
     /* Set URL(s) */
@@ -166,16 +206,9 @@ class Profile {
     }
 
     /* Select First Tab */
-    if (window.type !== 'action') {
-      window.tabs.select(tabs[0])
-    }
+    window.tabs.select(tabs[0])
 
     return window
-  }
-
-  /** Build IPC Channel Name */
-  ipcChannel(channel: string): string {
-    return `${channel}-${this.id}`
   }
 
   /** Handle Create Window */
@@ -217,7 +250,9 @@ class Profile {
     if (window) {
       const tab = window.tabs.getById(id)
       if (tab) {
-        this.extensions.removeTab(tab)
+        if (window.type === 'normal') {
+          this.extensions.removeTab(tab)
+        }
         window.tabs.remove(tab)
 
         if (window.tabs.getAll().length === 0) {
@@ -265,40 +300,6 @@ class Profile {
     return import.meta.env.VITE_DEFAULT_WEBVIEW_URL
   }
 
-  getWindowFromBaseWindow(baseWindow: Electron.BaseWindow): TabbedBrowserWindow | null {
-    return this.windows.find((win) => win.window.id === baseWindow.id) || null
-  }
-
-  getWindowFromWebContents(contents: Electron.WebContents): TabbedBrowserWindow | null {
-    return this.windows.find((win) => win.tabs.get(contents)) || null
-  }
-
-  getWindowFromTabId(tabId: number): TabbedBrowserWindow | null {
-    return this.windows.find((win) => win.tabs.getById(tabId)) || null
-  }
-
-  getFocusedWindow(): TabbedBrowserWindow | null {
-    return this.focusedWindow
-  }
-
-  getCurrentWindow(): TabbedBrowserWindow {
-    const focusedWindow = this.getFocusedWindow()
-    if (focusedWindow && focusedWindow.type !== 'action') {
-      return focusedWindow
-    }
-
-    let window = this.windows.find((win) => win.type !== 'action')
-
-    if (!window) {
-      window = new TabbedBrowserWindow(this, 'normal')
-      this.windows.push(window)
-    }
-
-    this.focusedWindow = window
-
-    return window
-  }
-
   /** Setup Extensions */
   setupExtensions(): void {
     this.extensions = new ElectronChromeExtensions({
@@ -309,7 +310,6 @@ class Profile {
       createTab: async (details) => {
         const window = this.getCurrentWindow()
         const tab = await window.tabs.create(details)
-        this.focusedWindow = window
         window.tabs.select(tab)
         return [tab, window.window]
       },

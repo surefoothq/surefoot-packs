@@ -17,9 +17,9 @@ const Browser: Component = () => {
       {/* Tabs */}
       <div class="relative grow">
         <For each={context.tabs()}>
-          {(item, index) => (
-            <div class={cn('absolute inset-0 flex flex-col', !item.active && 'invisible')}>
-              <BrowserTab index={index()} tab={item} />
+          {(tab, index) => (
+            <div class={cn('absolute inset-0 flex flex-col', !tab.isActive && 'invisible')}>
+              <BrowserTab index={index()} tab={tab} />
             </div>
           )}
         </For>

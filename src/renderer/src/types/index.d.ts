@@ -30,12 +30,12 @@ export type TabId = string | number
 
 export interface Tab {
   id: TabId
-  active: boolean
-  selected: boolean
+  isActive: boolean
+  isSelected: boolean
   title: string
   url: string
   initialUrl: string
-  icon?: string
+  faviconUrl?: string
   webContentsId?: number
   windowType: 'normal' | 'popup' | 'panel' | 'action'
   windowId: number

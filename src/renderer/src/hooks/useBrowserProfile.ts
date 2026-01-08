@@ -33,10 +33,10 @@ const useBrowserProfile = (profile: Accessor<Profile>): BrowserProfileContextTyp
   const tabs = createMemo(() => store.tabs.filter((tab) => tab.windowType !== 'action'))
 
   /* Active Tab */
-  const activeTab = createMemo(() => tabs().find((tab) => tab.active))
+  const activeTab = createMemo(() => tabs().find((tab) => tab.isActive))
 
   /* Selected Tab */
-  const selectedTab = createMemo(() => tabs().find((tab) => tab.selected))
+  const selectedTab = createMemo(() => tabs().find((tab) => tab.isSelected))
 
   /** Setup Profile */
   const setupProfile = (config: ProfileConfig): void => {
@@ -74,14 +74,15 @@ const useBrowserProfile = (profile: Accessor<Profile>): BrowserProfileContextTyp
     /* Add new active tab */
     batch(() => {
       if (newTab?.windowType !== 'action') {
-        setStore('tabs', { from: 0, to: store.tabs.length - 1 }, 'active', false)
+        setStore('tabs', { from: 0, to: store.tabs.length - 1 }, 'isActive', false)
       }
 
       const url = newTab?.url || store.config.newTabURL || import.meta.env.VITE_DEFAULT_WEBVIEW_URL
       setStore('tabs', store.tabs.length, {
         ...newTab,
         title: newTab?.title || 'New Tab',
-        active: newTab?.windowType !== 'action',
+        isSelected: newTab?.windowType === 'normal',
+        isActive: newTab?.windowType !== 'action',
         initialUrl: url,
         url: url
       })
@@ -94,18 +95,18 @@ const useBrowserProfile = (profile: Accessor<Profile>): BrowserProfileContextTyp
       const index = store.tabs.findIndex((tab) => tab.id === tabId)
       const tab = store.tabs[index]
 
-      if (tab) {
+      if (tab && tab.windowType !== 'action') {
         console.log('Set active tab:', tab)
 
         /* Set Selected (only for normal windows) */
         if (tab.windowType === 'normal') {
-          setStore('tabs', { from: 0, to: store.tabs.length - 1 }, 'selected', false)
-          setStore('tabs', index, 'selected', true)
+          setStore('tabs', { from: 0, to: store.tabs.length - 1 }, 'isSelected', false)
+          setStore('tabs', index, 'isSelected', true)
         }
 
         /* Set Active */
-        setStore('tabs', { from: 0, to: store.tabs.length - 1 }, 'active', false)
-        setStore('tabs', index, 'active', true)
+        setStore('tabs', { from: 0, to: store.tabs.length - 1 }, 'isActive', false)
+        setStore('tabs', index, 'isActive', true)
       }
     })
   }
@@ -118,9 +119,9 @@ const useBrowserProfile = (profile: Accessor<Profile>): BrowserProfileContextTyp
 
       if (tab) {
         /** If closed tab was active, set another tab as active */
-        if (tab.active && store.tabs.length > 1) {
+        if (tab.isActive && store.tabs.length > 1) {
           const newActiveIndex = index === 0 ? 0 : index - 1
-          setStore('tabs', newActiveIndex, 'active', true)
+          setStore('tabs', newActiveIndex, 'isActive', true)
         }
 
         /** Remove Tab */
@@ -133,12 +134,6 @@ const useBrowserProfile = (profile: Accessor<Profile>): BrowserProfileContextTyp
   const removeWindow = (windowId: number): void => {
     batch(() => {
       setStore('tabs', (tabs) => tabs.filter((tab) => tab.windowId !== windowId))
-      if (store.tabs.length > 0) {
-        const activeTabExists = store.tabs.some((tab) => tab.active)
-        if (!activeTabExists) {
-          setStore('tabs', 0, 'active', true)
-        }
-      }
     })
   }
 
@@ -158,7 +153,7 @@ const useBrowserProfile = (profile: Accessor<Profile>): BrowserProfileContextTyp
   /* Update Icon */
   const updateIcon = (tabId: TabId, icon?: string): void => {
     console.log('Updating icon for tab:', tabId, icon)
-    updateTab(tabId, { icon })
+    updateTab(tabId, { faviconUrl: icon })
   }
 
   /* Update WebContents ID */

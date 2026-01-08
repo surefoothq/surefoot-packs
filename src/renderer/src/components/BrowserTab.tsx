@@ -27,7 +27,8 @@ const BrowserTab: Component<BrowserTabProps> = (props) => {
     console.log('Rendering BrowserTab:', {
       index: props.index,
       tab: props.tab,
-      active: props.tab.active,
+      active: props.tab.isActive,
+      selected: props.tab.isSelected,
       webContentsId: props.tab.webContentsId
     })
   })
