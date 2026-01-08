@@ -294,6 +294,8 @@ class Profile {
       this.windows.push(window)
     }
 
+    this.focusedWindow = window
+
     return window
   }
 
