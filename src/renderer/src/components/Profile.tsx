@@ -21,18 +21,19 @@ const Profile: Component<ProfileProps> = (props) => {
   return (
     <BrowserProfileContext.Provider value={context}>
       {/* Profile Content */}
-
       <div
         ref={context.setContainerRef}
         class={cn(
           'grow flex flex-col shrink-0',
           'divide-y dark:divide-slate-700',
-          'bg-white dark:bg-slate-800 dark:text-white'
+          'bg-white dark:bg-slate-800 dark:text-white',
+          'relative'
         )}
       >
         {/* Profile Header */}
         <ProfileHeader />
 
+        {/* Profile View */}
         <Show
           when={context.store.ready}
           fallback={
@@ -41,9 +42,8 @@ const Profile: Component<ProfileProps> = (props) => {
             </EmptyView>
           }
         >
-          {/* Farmer and Browser */}
+          {/* Browser */}
           <ProfileViewContainer>
-            {/* Profile View */}
             <Browser />
           </ProfileViewContainer>
 

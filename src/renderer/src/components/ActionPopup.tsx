@@ -1,0 +1,35 @@
+import { Component } from 'solid-js'
+import { Dialog } from '@kobalte/core'
+import { cn } from '@renderer/lib/utils'
+import { useBrowserProfileContext } from '@renderer/hooks/useBrowserProfileContext'
+
+import BrowserIcon from '../assets/images/browser.png'
+import { BrowserWebview } from './BrowserWebview'
+
+const ActionPopup: Component = () => {
+  const context = useBrowserProfileContext()
+  const action = context.action()!
+
+  return (
+    <Dialog.Root open onOpenChange={() => context.sendIpc('remove-tab', action.id)}>
+      <Dialog.Overlay class="absolute inset-0 bg-black/50 z-10" />
+      <Dialog.Content
+        class={cn(
+          'absolute bottom-0 z-20',
+          'flex flex-col',
+          'h-4/5 w-full rounded-t-xl overflow-clip',
+          'bg-slate-800'
+        )}
+      >
+        <div class="shrink-0 p-2 flex justify-center items-center gap-2">
+          <img src={action.icon || BrowserIcon} alt="icon" class="size-6 rounded-full" />
+          <Dialog.Title class="font-bold">{action.title}</Dialog.Title>
+          <Dialog.Description class="sr-only">{action.title}</Dialog.Description>
+        </div>
+        <BrowserWebview tab={action} src={action.url} />
+      </Dialog.Content>
+    </Dialog.Root>
+  )
+}
+
+export { ActionPopup }

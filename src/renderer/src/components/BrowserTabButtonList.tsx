@@ -1,9 +1,10 @@
-import { useBrowserProfileContext } from '@renderer/hooks/useBrowserProfileContext'
-import { cn } from '@renderer/lib/utils'
 import { Component, For } from 'solid-js'
-import { WebviewButton } from './WebviewButton'
 import { HiOutlinePlus } from 'solid-icons/hi'
+import { cn } from '@renderer/lib/utils'
+import { useBrowserProfileContext } from '@renderer/hooks/useBrowserProfileContext'
+
 import { BrowserTabButton } from './BrowserTabButton'
+import { WebviewButton } from './WebviewButton'
 
 const BrowserTabButtonList: Component = () => {
   /* Get Context */
@@ -35,14 +36,18 @@ const BrowserTabButtonList: Component = () => {
     >
       {/* Main */}
       <div class="sticky left-0 py-1 px-2 bg-white z-1 dark:bg-slate-800 shrink-0">
-        <WebviewButton onClick={() => context.addTab()}>
+        <WebviewButton
+          onClick={() =>
+            context.sendIpc('create-tab', { url: context.store.config.newTabURL || '' })
+          }
+        >
           <HiOutlinePlus class="size-4" />
         </WebviewButton>
       </div>
 
       {/* Tab Buttons */}
       <div class="flex gap-1 flex-nowrap shrink-0">
-        <For each={context.store.tabs}>
+        <For each={context.tabs()}>
           {(tab) => <BrowserTabButton tab={tab} scrollToTabButton={scrollToTabButton} />}
         </For>
       </div>

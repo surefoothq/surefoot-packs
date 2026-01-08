@@ -26,14 +26,18 @@ export interface AppStore {
   columns: number
 }
 
+export type TabId = string | number
+
 export interface Tab {
-  id: string
+  id: TabId
   active: boolean
+  selected: boolean
   title: string
   url: string
-  type?: 'normal' | 'popup' | 'panel'
   icon?: string
   webContentsId?: number
+  windowType: 'normal' | 'popup' | 'panel' | 'action'
+  windowId: number
 }
 
 export interface BrowserProfileStore {
@@ -47,7 +51,10 @@ export interface BrowserProfileStore {
 export interface BrowserProfileContextType {
   profile: Accessor<Profile>
   store: BrowserProfileStore
+  tabs: Accessor<Tab[]>
+  action: Accessor<Tab | undefined>
   activeTab: Accessor<Tab | undefined>
+  selectedTab: Accessor<Tab | undefined>
   setStore: SetStoreFunction<BrowserProfileStore>
   setConfig: (config: Partial<ProfileConfig>) => void
   setReady: (ready: boolean) => void
@@ -55,13 +62,13 @@ export interface BrowserProfileContextType {
   setContainerRef: (el: HTMLElement | null) => void
   toggleFullScreen: () => void
   toggleAside: () => void
-  setActiveTab: (tabId: string) => void
-  closeTab: (tabId: string) => void
+  setActiveTab: (tabId: TabId) => void
+  closeTab: (tabId: TabId) => void
   addTab: () => void
-  updateTab: (tabId: string, updates: Partial<Tab>) => void
-  updateTitle: (tabId: string, title: string) => void
-  updateIcon: (tabId: string, icon?: string) => void
-  updateWebContentsId: (tabId: string, webContentsId: number) => void
+  updateTab: (tabId: TabId, updates: Partial<Tab>) => void
+  updateTitle: (tabId: TabId, title: string) => void
+  updateIcon: (tabId: TabId, icon?: string) => void
+  updateWebContentsId: (tabId: TabId, webContentsId: number) => void
   sendIpc: (channel: string, ...args: unknown[]) => void
   invokeIpc: (channel: string, ...args: unknown[]) => Promise<unknown>
 }

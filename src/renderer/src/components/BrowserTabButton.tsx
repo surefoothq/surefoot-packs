@@ -1,9 +1,10 @@
+import { Component, createEffect } from 'solid-js'
 import { HiOutlineXMark } from 'solid-icons/hi'
+import { Tab } from '@renderer/types'
+import { useBrowserProfileContext } from '@renderer/hooks/useBrowserProfileContext'
+
 import BrowserIcon from '../assets/images/browser.png'
 import { cn } from '../lib/utils'
-import { Tab } from '@renderer/types'
-import { Component, createEffect } from 'solid-js'
-import { useBrowserProfileContext } from '@renderer/hooks/useBrowserProfileContext'
 
 /** Browser Tab Button Props */
 interface BrowserTabButtonProps {
@@ -15,10 +16,11 @@ interface BrowserTabButtonProps {
 const BrowserTabButton: Component<BrowserTabButtonProps> = (props) => {
   let ref!: HTMLDivElement
 
+  /* Get Context */
   const context = useBrowserProfileContext()
 
   /** Button Click Handler */
-  const handleTabButtonClick = (): void => context.setActiveTab(props.tab.id)
+  const handleTabButtonClick = (): void => context.sendIpc('select-tab', props.tab.id)
 
   /** Close Button Click Handler */
   const handleCloseButtonClick = (ev: MouseEvent): void => {
@@ -26,7 +28,7 @@ const BrowserTabButton: Component<BrowserTabButtonProps> = (props) => {
     ev.stopPropagation()
 
     /** Close Tab */
-    context.closeTab(props.tab.id)
+    context.sendIpc('remove-tab', props.tab.id)
   }
 
   /** Scroll into View */
