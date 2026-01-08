@@ -190,14 +190,10 @@ class Profile {
     _event: Electron.IpcMainEvent,
     details: chrome.tabs.CreateProperties
   ): Promise<void> {
-    if (this.focusedWindow) {
-      const window = this.focusedWindow
-      const tab = await window.tabs.create(details)
-      this.extensions.addTab(tab, window.window)
-      this.extensions.selectTab(tab)
-    } else {
-      await this.createInitialWindow()
-    }
+    const window = this.getCurrentWindow()
+    const tab = await window.tabs.create(details)
+    this.extensions.addTab(tab, window.window)
+    this.extensions.selectTab(tab)
   }
 
   /** Handle Select Tab */
@@ -285,6 +281,22 @@ class Profile {
     return this.focusedWindow
   }
 
+  getCurrentWindow(): TabbedBrowserWindow {
+    const focusedWindow = this.getFocusedWindow()
+    if (focusedWindow && focusedWindow.type !== 'action') {
+      return focusedWindow
+    }
+
+    let window = this.windows.find((win) => win.type !== 'action')
+
+    if (!window) {
+      window = new TabbedBrowserWindow(this, 'normal')
+      this.windows.push(window)
+    }
+
+    return window
+  }
+
   /** Setup Extensions */
   setupExtensions(): void {
     this.extensions = new ElectronChromeExtensions({
@@ -293,8 +305,10 @@ class Profile {
 
       /* Create Tab  */
       createTab: async (details) => {
-        const window = this.getFocusedWindow()!
+        const window = this.getCurrentWindow()
         const tab = await window.tabs.create(details)
+        this.focusedWindow = window
+        window.tabs.select(tab)
         return [tab, window.window]
       },
 
@@ -309,14 +323,17 @@ class Profile {
         const window = this.getWindowFromWebContents(tab)
         if (window) {
           window.tabs.remove(tab)
+          if (window.tabs.getAll().length === 0) {
+            this.removeWindow(window)
+          }
         }
       },
 
       /* Remove Window  */
-      removeWindow: (window) => {
-        const tabbedWindow = this.getWindowFromBaseWindow(window)
-        if (tabbedWindow) {
-          this.removeWindow(tabbedWindow)
+      removeWindow: (baseWindow) => {
+        const window = this.getWindowFromBaseWindow(baseWindow)
+        if (window) {
+          this.removeWindow(window)
         }
       },
 
@@ -350,16 +367,18 @@ class Profile {
   }
 
   async removeWindow(window: TabbedBrowserWindow): Promise<void> {
-    window.tabs.getAll().forEach((tab) => {
-      this.extensions.removeTab(tab)
-    })
+    if (window.type === 'normal') {
+      window.tabs.getAll().forEach((tab) => {
+        this.extensions.removeTab(tab)
+      })
+    }
     window.destroy()
 
     this.windows = this.windows.filter((win) => win !== window)
     this.sendMessageToHost('remove-window', { id: window.window.id })
 
     if (this.focusedWindow === window) {
-      this.focusedWindow = this.windows.length > 0 ? this.windows[0] : null
+      this.focusedWindow = this.windows.find((win) => win.type !== 'action') || null
 
       if (this.focusedWindow) {
         const tab = this.focusedWindow.tabs.getAll()[0]
@@ -367,6 +386,7 @@ class Profile {
           if (this.focusedWindow.type === 'normal') {
             this.extensions.selectTab(tab)
           }
+
           this.focusedWindow.tabs.select(tab)
         }
       }
@@ -422,6 +442,8 @@ class Profile {
   destroy(): void {
     console.log(`Destroying profile: ${this.id}`)
     app.off('web-contents-created', this.configureWebContents)
+    this.windows.forEach((window) => window.destroy())
+    this.windows = []
   }
 }
 
