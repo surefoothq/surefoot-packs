@@ -4,6 +4,7 @@ import { ElectronChromeExtensions } from 'electron-chrome-extensions'
 import { buildChromeContextMenu } from 'electron-chrome-context-menu'
 import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 import { join } from 'path'
+import { nativeTheme } from 'electron/main'
 
 import icon from '../../resources/icon.png?asset'
 import { Profile } from './Profile'
@@ -108,6 +109,10 @@ class App {
     new Conf().registerRendererListener()
   }
 
+  setTheme(): void {
+    nativeTheme.themeSource = 'dark'
+  }
+
   /** Initialize Application */
   initialize(): void {
     // This method will be called when Electron has finished
@@ -127,6 +132,7 @@ class App {
       this.setupConfig()
       this.registerIpcHandlers()
       this.handleCRXProtocol()
+      this.setTheme()
       this.createWindow()
 
       app.on('activate', () => {
