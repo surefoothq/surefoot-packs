@@ -28,6 +28,9 @@ const useBrowserProfile = (profile: Accessor<Profile>): BrowserProfileContextTyp
     action: null
   })
 
+  /** Get partition */
+  const partition = (): string => `persist:profile-${profile().id}`
+
   /* Active Tab */
   const activeTab = createMemo(() => store.tabs.find((tab) => tab.isActive))
 
@@ -273,6 +276,7 @@ const useBrowserProfile = (profile: Accessor<Profile>): BrowserProfileContextTyp
   return {
     profile,
     store,
+    partition,
     activeTab,
     setStore,
     setConfig,

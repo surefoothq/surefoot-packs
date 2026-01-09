@@ -1,11 +1,14 @@
+import {} from '@kobalte/core'
+
 import {} from './BrowserWebview'
 
-import { Component, onMount } from 'solid-js'
-import { Dialog } from '@kobalte/core'
+import { Component, createMemo, onMount } from 'solid-js'
+import { HiSolidXMark } from 'solid-icons/hi'
 import { cn } from '@renderer/lib/utils'
 import { useBrowserProfileContext } from '@renderer/hooks/useBrowserProfileContext'
 
 import BrowserIcon from '../assets/images/browser.png'
+import { WebviewButton } from './WebviewButton'
 
 const ActionPopup: Component = () => {
   const context = useBrowserProfileContext()
@@ -19,15 +22,25 @@ const ActionPopup: Component = () => {
     })
   })
 
+  const icon = createMemo(() => {
+    const extension = action.extension
+    const selected = (extension.manifest['icons'] ?? {})[32]
+
+    return selected
+      ? `crx://extension-icon/${extension.id}/32/2?${new URLSearchParams({
+          partition: context.partition()
+        })}`
+      : null
+  })
+
+  const closeAction = (): void => context.sendIpc('close-action-popup')
+
+  console.log(action)
+
   return (
-    <Dialog.Root
-      open
-      modal={false}
-      preventScroll={false}
-      onOpenChange={() => context.sendIpc('close-action-popup')}
-    >
-      <Dialog.Overlay class="absolute inset-0 bg-black/50 z-10" />
-      <Dialog.Content
+    <>
+      <div class="absolute inset-0 bg-black/50 z-10" onClick={() => closeAction()} />
+      <div
         class={cn(
           'absolute bottom-0 z-20',
           'flex flex-col',
@@ -35,21 +48,24 @@ const ActionPopup: Component = () => {
           'bg-slate-800'
         )}
       >
-        <div class="shrink-0 p-2 flex justify-center items-center gap-2">
-          <img src={BrowserIcon} alt="icon" class="size-6 rounded-full" />
-          <Dialog.Title class="font-bold">{action.extension.name}</Dialog.Title>
-          <Dialog.Description class="sr-only">{action.extension.name}</Dialog.Description>
+        {/* Header */}
+        <div class="shrink-0 p-2 flex items-center gap-2">
+          <img src={icon() || BrowserIcon} alt="icon" class="size-6 shrink-0 rounded-full" />
+          <h3 class="font-bold grow min-w-0 truncate text-center">{action.extension.name}</h3>
+          <WebviewButton onClick={closeAction} class="size-8 p-0 shrink-0">
+            <HiSolidXMark />
+          </WebviewButton>
         </div>
 
         <webview
           src={action.url}
           allowpopups={true}
           class={cn('grow')}
-          partition={`persist:profile-${context.profile().id}`}
+          partition={context.partition()}
           ref={(ref) => (webview = ref as Electron.WebviewTag)}
         />
-      </Dialog.Content>
-    </Dialog.Root>
+      </div>
+    </>
   )
 }
 

@@ -1,6 +1,6 @@
 import isUrl from 'is-url'
 import normalizeUrl from 'normalize-url'
-import { Component } from 'solid-js'
+import { Component, onMount } from 'solid-js'
 
 import Icon from './assets/images/icon.svg'
 import { cn } from './lib/utils'
@@ -19,6 +19,12 @@ const NewTab: Component = () => {
 
     location.href = finalUrl
   }
+
+  onMount(() => {
+    // TEST extension
+    // window.phantom.solana.disconnect()
+    // window.phantom.solana.connect()
+  })
 
   return (
     <div class={cn('min-h-dvh flex flex-col justify-center items-center gap-4 p-4')}>

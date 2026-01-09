@@ -56,6 +56,7 @@ export interface BrowserProfileStore {
 
 export interface BrowserProfileContextType {
   profile: Accessor<Profile>
+  partition: Accessor<string>
   store: BrowserProfileStore
   activeTab: Accessor<Tab | undefined>
   setStore: SetStoreFunction<BrowserProfileStore>

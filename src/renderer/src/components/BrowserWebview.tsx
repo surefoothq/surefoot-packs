@@ -1,6 +1,8 @@
 import {} from 'solid-icons/hi'
+
 import {} from './Input'
 import {} from './WebviewButton'
+
 import { Component, createEffect, onCleanup, onMount } from 'solid-js'
 import { Tab } from '@renderer/types'
 import { cn } from '@renderer/lib/utils'
@@ -105,7 +107,7 @@ const BrowserWebview: Component<BrowserWebviewProps> = (props) => {
       src={props.tab.initialUrl}
       allowpopups={true}
       class={cn('grow', props.class)}
-      partition={`persist:profile-${context.profile().id}`}
+      partition={context.partition()}
       ref={(webviewRef) => setWebviewRef(webviewRef as Electron.WebviewTag)}
     />
   )

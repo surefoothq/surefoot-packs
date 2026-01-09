@@ -397,6 +397,8 @@ class Profile {
   }
 
   async removeWindow(window: TabbedBrowserWindow): Promise<void> {
+    const index = this.windows.findIndex((win) => win === window)
+
     window.tabs.getAll().forEach((tab) => {
       this.extensions.removeTab(tab)
     })
@@ -405,13 +407,13 @@ class Profile {
     this.windows = this.windows.filter((win) => win !== window)
     this.sendMessageToHost('remove-window', { id: window.window.id })
 
-    if (this.focusedWindow === window) {
-      const selected = this.windows[0]
+    if (this.focusedWindow === window && this.windows.length > 1) {
+      const selected = this.windows[index === 0 ? 0 : index - 1]
 
       if (selected) {
         this.focusWindow(selected)
 
-        const tab = selected.tabs.getAll()[0]
+        const tab = selected.tabs.getAll().at(-1)
         if (tab) {
           this.extensions.selectTab(tab)
           selected.tabs.select(tab)
