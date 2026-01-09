@@ -40,6 +40,12 @@ const BrowserTab: Component<BrowserTabProps> = (props) => {
         <BrowserTabControls tab={props.tab} getWebview={getWebview} />
       </Show>
 
+      <Show when={import.meta.env.DEV}>
+        <div class="shrink-0 p-1">
+          Window ID: {props.tab.windowId}, Tab ID: {props.tab.id}
+        </div>
+      </Show>
+
       {/* Webview */}
       <BrowserWebview tab={props.tab} ref={(webview) => (webviewRef = webview)} />
     </div>
