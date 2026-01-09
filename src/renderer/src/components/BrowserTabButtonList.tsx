@@ -47,7 +47,7 @@ const BrowserTabButtonList: Component = () => {
 
       {/* Tab Buttons */}
       <div class="flex gap-1 flex-nowrap shrink-0">
-        <For each={context.tabs()}>
+        <For each={context.store.tabs}>
           {(tab) => <BrowserTabButton tab={tab} scrollToTabButton={scrollToTabButton} />}
         </For>
       </div>

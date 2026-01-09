@@ -16,7 +16,7 @@ const Browser: Component = () => {
 
       {/* Tabs */}
       <div class="relative grow">
-        <For each={context.tabs()}>
+        <For each={context.store.tabs}>
           {(tab, index) => (
             <div class={cn('absolute inset-0 flex flex-col', !tab.isActive && 'invisible')}>
               <BrowserTab index={index()} tab={tab} />
@@ -26,7 +26,7 @@ const Browser: Component = () => {
       </div>
 
       {/* Action Popup */}
-      <Show when={context.action()}>
+      <Show when={context.store.action}>
         <ActionPopup />
       </Show>
     </div>

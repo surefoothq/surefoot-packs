@@ -2,6 +2,7 @@ import {} from '@renderer/lib/utils'
 
 import { Accessor, batch, createEffect, createMemo, onCleanup, onMount } from 'solid-js'
 import {
+  BrowserActionPopup,
   BrowserProfileContextType,
   BrowserProfileStore,
   Profile,
@@ -23,20 +24,12 @@ const useBrowserProfile = (profile: Accessor<Profile>): BrowserProfileContextTyp
     ready: false,
     showAside: false,
     isDesktop: false,
-    tabs: []
+    tabs: [],
+    action: null
   })
 
-  /* Action Tab */
-  const action = createMemo(() => store.tabs.find((tab) => tab.windowType === 'action'))
-
-  /* Tabs (exclude action) */
-  const tabs = createMemo(() => store.tabs.filter((tab) => tab.windowType !== 'action'))
-
   /* Active Tab */
-  const activeTab = createMemo(() => tabs().find((tab) => tab.isActive))
-
-  /* Selected Tab */
-  const selectedTab = createMemo(() => tabs().find((tab) => tab.isSelected))
+  const activeTab = createMemo(() => store.tabs.find((tab) => tab.isActive))
 
   /** Setup Profile */
   const setupProfile = (config: ProfileConfig): void => {
@@ -69,20 +62,21 @@ const useBrowserProfile = (profile: Accessor<Profile>): BrowserProfileContextTyp
     setStore('config', config)
   }
 
+  /* Set action popup */
+  const setActionPopup = (details: BrowserActionPopup | null): void => {
+    setStore('action', details)
+  }
+
   /* Add Tab */
   const addTab = (newTab?: Tab): void => {
     /* Add new active tab */
     batch(() => {
-      if (newTab?.windowType !== 'action') {
-        setStore('tabs', { from: 0, to: store.tabs.length - 1 }, 'isActive', false)
-      }
-
       const url = newTab?.url || store.config.newTabURL || import.meta.env.VITE_DEFAULT_WEBVIEW_URL
+      setStore('tabs', { from: 0, to: store.tabs.length - 1 }, 'isActive', false)
       setStore('tabs', store.tabs.length, {
         ...newTab,
         title: newTab?.title || 'New Tab',
-        isSelected: newTab?.windowType === 'normal',
-        isActive: newTab?.windowType !== 'action',
+        isActive: true,
         initialUrl: url,
         url: url
       })
@@ -95,15 +89,7 @@ const useBrowserProfile = (profile: Accessor<Profile>): BrowserProfileContextTyp
       const index = store.tabs.findIndex((tab) => tab.id === tabId)
       const tab = store.tabs[index]
 
-      if (tab && tab.windowType !== 'action') {
-        console.log('Set active tab:', tab)
-
-        /* Set Selected (only for normal windows) */
-        if (tab.windowType === 'normal') {
-          setStore('tabs', { from: 0, to: store.tabs.length - 1 }, 'isSelected', false)
-          setStore('tabs', index, 'isSelected', true)
-        }
-
+      if (tab) {
         /* Set Active */
         setStore('tabs', { from: 0, to: store.tabs.length - 1 }, 'isActive', false)
         setStore('tabs', index, 'isActive', true)
@@ -256,9 +242,22 @@ const useBrowserProfile = (profile: Accessor<Profile>): BrowserProfileContextTyp
           break
         }
 
+        /* Remove window */
         case 'remove-window': {
           const { id } = data as { id: number }
           removeWindow(id)
+          break
+        }
+
+        /* Open action popup */
+        case 'open-action-popup': {
+          setActionPopup(data as BrowserActionPopup)
+          break
+        }
+
+        /* Close action popup */
+        case 'close-action-popup': {
+          setActionPopup(null)
           break
         }
       }
@@ -274,10 +273,7 @@ const useBrowserProfile = (profile: Accessor<Profile>): BrowserProfileContextTyp
   return {
     profile,
     store,
-    tabs,
-    action,
     activeTab,
-    selectedTab,
     setStore,
     setConfig,
     setReady,

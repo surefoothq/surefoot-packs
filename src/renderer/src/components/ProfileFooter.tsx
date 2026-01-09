@@ -11,12 +11,12 @@ const ProfileFooter: Component = () => {
   const context = useBrowserProfileContext()
 
   return (
-    <Show when={context.selectedTab()}>
+    <Show when={context.activeTab()}>
       <div class="shrink-0 flex flex-wrap items-center justify-center p-1 gap-2">
         <div class="border border-slate-200 dark:border-slate-600 rounded-full p-1 px-2 overflow-auto">
           <BrowserActionList
             partition={`persist:profile-${context.profile().id}`}
-            tab={context.selectedTab()?.webContentsId}
+            tab={context.activeTab()?.webContentsId}
           />
         </div>
       </div>

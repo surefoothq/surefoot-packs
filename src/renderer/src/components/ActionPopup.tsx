@@ -1,14 +1,15 @@
+import {} from './BrowserWebview'
+
 import { Component, onMount } from 'solid-js'
 import { Dialog } from '@kobalte/core'
 import { cn } from '@renderer/lib/utils'
 import { useBrowserProfileContext } from '@renderer/hooks/useBrowserProfileContext'
 
 import BrowserIcon from '../assets/images/browser.png'
-import { BrowserWebview } from './BrowserWebview'
 
 const ActionPopup: Component = () => {
   const context = useBrowserProfileContext()
-  const action = context.action()!
+  const action = context.store.action!
 
   let webview!: Electron.WebviewTag
 
@@ -23,7 +24,7 @@ const ActionPopup: Component = () => {
       open
       modal={false}
       preventScroll={false}
-      onOpenChange={() => context.sendIpc('remove-tab', action.id)}
+      onOpenChange={() => context.sendIpc('close-action-popup')}
     >
       <Dialog.Overlay class="absolute inset-0 bg-black/50 z-10" />
       <Dialog.Content
@@ -35,11 +36,18 @@ const ActionPopup: Component = () => {
         )}
       >
         <div class="shrink-0 p-2 flex justify-center items-center gap-2">
-          <img src={action.faviconUrl || BrowserIcon} alt="icon" class="size-6 rounded-full" />
-          <Dialog.Title class="font-bold">{action.title}</Dialog.Title>
-          <Dialog.Description class="sr-only">{action.title}</Dialog.Description>
+          <img src={BrowserIcon} alt="icon" class="size-6 rounded-full" />
+          <Dialog.Title class="font-bold">{action.extension.name}</Dialog.Title>
+          <Dialog.Description class="sr-only">{action.extension.name}</Dialog.Description>
         </div>
-        <BrowserWebview tab={action} ref={(ref) => (webview = ref)} />
+
+        <webview
+          src={action.url}
+          allowpopups={true}
+          class={cn('grow')}
+          partition={`persist:profile-${context.profile().id}`}
+          ref={(ref) => (webview = ref as Electron.WebviewTag)}
+        />
       </Dialog.Content>
     </Dialog.Root>
   )

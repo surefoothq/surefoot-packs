@@ -28,10 +28,14 @@ export interface AppStore {
 
 export type TabId = string | number
 
-export interface Tab {
+export interface BrowserActionPopup {
+  extension: Electron.Extension
+  url: string
+}
+
+export interface Tab extends chrome.tabs.Tab {
   id: TabId
   isActive: boolean
-  isSelected: boolean
   title: string
   url: string
   initialUrl: string
@@ -43,6 +47,7 @@ export interface Tab {
 
 export interface BrowserProfileStore {
   config: ProfileConfig
+  action: BrowserActionPopup | null
   tabs: Tab[]
   isDesktop: boolean
   showAside: boolean
@@ -52,10 +57,7 @@ export interface BrowserProfileStore {
 export interface BrowserProfileContextType {
   profile: Accessor<Profile>
   store: BrowserProfileStore
-  tabs: Accessor<Tab[]>
-  action: Accessor<Tab | undefined>
   activeTab: Accessor<Tab | undefined>
-  selectedTab: Accessor<Tab | undefined>
   setStore: SetStoreFunction<BrowserProfileStore>
   setConfig: (config: Partial<ProfileConfig>) => void
   setReady: (ready: boolean) => void

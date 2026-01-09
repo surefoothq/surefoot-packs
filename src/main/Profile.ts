@@ -8,6 +8,7 @@ import { is } from '@electron-toolkit/utils'
 import { join } from 'path'
 
 import App from './App'
+import { BrowserActionPopup } from './BrowserActionPopup'
 import type { ProfileConfig, WindowType } from './types'
 import { TabbedBrowserWindow } from './TabbedBrowserWindow'
 
@@ -25,6 +26,7 @@ class Profile {
   session: Electron.Session
   extensions!: ElectronChromeExtensions
   ready: boolean = false
+  popup: BrowserActionPopup | null = null
   newTabExtension: Electron.Extension | null = null
   readyPromise: Promise<ProfileConfig> | null = null
   windows: TabbedBrowserWindow[] = []
@@ -68,12 +70,12 @@ class Profile {
   }
 
   getCurrentWindow(): TabbedBrowserWindow {
-    const currentlyFocusedWindow = this.getFocusedWindow()
-    if (currentlyFocusedWindow && currentlyFocusedWindow.type !== 'action') {
-      return currentlyFocusedWindow
+    const focused = this.getFocusedWindow()
+    if (focused) {
+      return focused
     }
 
-    let window = this.windows.find((win) => win.type === 'normal')
+    let window = this.windows[0]
 
     if (!window) {
       window = new TabbedBrowserWindow(this, 'normal')
@@ -197,7 +199,7 @@ class Profile {
 
   /** Create Window */
   createWindow(details: CreateWindowData): TabbedBrowserWindow {
-    const window = new TabbedBrowserWindow(this, details.type === 'action' ? 'action' : 'normal')
+    const window = new TabbedBrowserWindow(this, details.type)
     this.windows.push(window)
     this.extensions.addWindow(window.window)
     this.focusWindow(window)
@@ -211,12 +213,10 @@ class Profile {
       const tabs = await Promise.all(urls.map((url) => window.tabs.create({ url })))
 
       /* Add Tabs to Extensions */
-      if (window.type === 'normal') {
-        tabs.forEach((tab) => this.extensions.addTab(tab, window.window))
-        this.extensions.selectTab(tabs[0])
-      }
+      tabs.forEach((tab) => this.extensions.addTab(tab, window.window))
 
       /* Select First Tab */
+      this.extensions.selectTab(tabs[0])
       window.tabs.select(tabs[0])
     })
 
@@ -240,6 +240,14 @@ class Profile {
     this.extensions.addTab(tab, window.window)
     this.extensions.selectTab(tab)
     this.focusWindow(window)
+  }
+
+  /** Handle close action popup */
+  handleCloseActionPopup(): void {
+    if (this.popup) {
+      this.popup.destroy()
+      this.popup = null
+    }
   }
 
   /** Handle Select Tab */
@@ -266,9 +274,7 @@ class Profile {
     if (window) {
       const tab = window.tabs.getById(id)
       if (tab) {
-        if (window.type === 'normal') {
-          this.extensions.removeTab(tab)
-        }
+        this.extensions.removeTab(tab)
         window.tabs.remove(tab)
 
         if (window.tabs.getAll().length === 0) {
@@ -285,6 +291,7 @@ class Profile {
     ipcMain.on(this.ipcChannel('create-tab'), this.handleCreateTab.bind(this))
     ipcMain.on(this.ipcChannel('select-tab'), this.handleSelectTab.bind(this))
     ipcMain.on(this.ipcChannel('remove-tab'), this.handleRemoveTab.bind(this))
+    ipcMain.on(this.ipcChannel('close-action-popup'), this.handleCloseActionPopup.bind(this))
   }
 
   /** Load New Tab Page */
@@ -375,35 +382,37 @@ class Profile {
       },
 
       /* Open Popup  */
-      openPopup: async (_extensionId, url): Promise<TabbedBrowserWindow> => {
-        return await this.createWindow({ url, type: 'action' })
+      openPopup: (extensionId, url) => {
+        this.popup = new BrowserActionPopup(this, extensionId, url)
+        this.popup.open()
+        return this.popup
       },
 
       /* Close Popup  */
-      closePopup: async (_extensionId, window: TabbedBrowserWindow) => {
-        await this.removeWindow(window)
+      closePopup: (_extensionId, popup: BrowserActionPopup) => {
+        popup.destroy()
+        this.popup = null
       }
     })
   }
 
   async removeWindow(window: TabbedBrowserWindow): Promise<void> {
-    if (window.type === 'normal') {
-      window.tabs.getAll().forEach((tab) => {
-        this.extensions.removeTab(tab)
-      })
-    }
+    window.tabs.getAll().forEach((tab) => {
+      this.extensions.removeTab(tab)
+    })
     window.destroy()
 
     this.windows = this.windows.filter((win) => win !== window)
     this.sendMessageToHost('remove-window', { id: window.window.id })
 
-    if (this.focusedWindow === window && window.type !== 'popup') {
-      const selected = this.windows.find((win) => win.type !== 'action') || null
+    if (this.focusedWindow === window) {
+      const selected = this.windows[0]
 
       if (selected) {
+        this.focusWindow(selected)
+
         const tab = selected.tabs.getAll()[0]
         if (tab) {
-          this.focusWindow(selected)
           this.extensions.selectTab(tab)
           selected.tabs.select(tab)
         }

@@ -28,7 +28,6 @@ const BrowserTab: Component<BrowserTabProps> = (props) => {
       index: props.index,
       tab: props.tab,
       active: props.tab.isActive,
-      selected: props.tab.isSelected,
       webContentsId: props.tab.webContentsId
     })
   })
