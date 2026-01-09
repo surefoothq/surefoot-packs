@@ -78,6 +78,7 @@ class Profile {
     if (!window) {
       window = new TabbedBrowserWindow(this, 'normal')
       this.windows.push(window)
+      this.extensions.addWindow(window.window)
     }
 
     return window
@@ -184,10 +185,9 @@ class Profile {
   }
 
   focusWindow(window: TabbedBrowserWindow): void {
-    if (window !== this.focusedWindow) {
-      window.window.focus()
-      this.focusedWindow = window
-    }
+    window.window.focus()
+    this.extensions.focusWindow(window.window)
+    this.focusedWindow = window
   }
 
   /** Create Initial Window */
@@ -197,13 +197,12 @@ class Profile {
 
   /** Create Window */
   createWindow(details: CreateWindowData): TabbedBrowserWindow {
-    const window = new TabbedBrowserWindow(this, details.type)
+    const window = new TabbedBrowserWindow(this, details.type === 'action' ? 'action' : 'normal')
     this.windows.push(window)
+    this.extensions.addWindow(window.window)
+    this.focusWindow(window)
 
     queueMicrotask(async () => {
-      /* Focus Window */
-      this.focusWindow(window)
-
       /* Set URL(s) */
       details.url = details.url || this.getNewTabURL()
 
@@ -328,10 +327,7 @@ class Profile {
         const window = this.getCurrentWindow()
         const tab = await window.tabs.create(details)
         window.tabs.select(tab)
-
-        queueMicrotask(() => {
-          this.focusWindow(window)
-        })
+        this.focusWindow(window)
 
         return [tab, window.window]
       },
