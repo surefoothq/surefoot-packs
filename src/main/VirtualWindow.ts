@@ -1,9 +1,12 @@
-class VirtualWindow {
+import EventEmitter from 'node:events'
+
+class VirtualWindow extends EventEmitter {
   id: number
   baseWindow: Electron.BaseWindow
   destroyed: boolean = false
 
   constructor(baseWindow: Electron.BaseWindow) {
+    super()
     this.id = Math.floor(Date.now() / 1000)
     this.baseWindow = baseWindow
 
@@ -37,8 +40,29 @@ class VirtualWindow {
     })
   }
 
+  focus(): void {
+    this.emit('focus')
+  }
+
   destroy(): void {
     this.destroyed = true
+    this.emit('closed')
+  }
+
+  maximize(): void {
+    // TODO
+  }
+
+  minimize(): void {
+    // TODO
+  }
+
+  isMinimized(): boolean {
+    return false
+  }
+
+  isMaximized(): boolean {
+    return true
   }
 
   isDestroyed(): boolean {

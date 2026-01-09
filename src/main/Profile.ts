@@ -68,9 +68,9 @@ class Profile {
   }
 
   getCurrentWindow(): TabbedBrowserWindow {
-    const focusedWindow = this.getFocusedWindow()
-    if (focusedWindow && focusedWindow.type !== 'action') {
-      return focusedWindow
+    const currentlyFocusedWindow = this.getFocusedWindow()
+    if (currentlyFocusedWindow && currentlyFocusedWindow.type !== 'action') {
+      return currentlyFocusedWindow
     }
 
     let window = this.windows.find((win) => win.type === 'normal')
@@ -79,7 +79,6 @@ class Profile {
       window = new TabbedBrowserWindow(this, 'normal')
       this.windows.push(window)
     }
-    this.focusedWindow = window
 
     return window
   }
@@ -87,6 +86,11 @@ class Profile {
   /** Configure WebContents */
   configureWebContents(_event: Electron.Event, contents: Electron.WebContents): void {
     if (contents.session === this.session) {
+      /* Open dev tools */
+      if (is.dev) {
+        contents.openDevTools()
+      }
+
       /* Function to open link in new window */
       const openLink = (data: { url: string }): void => {
         this.createWindow(data)
@@ -179,36 +183,43 @@ class Profile {
     }
   }
 
+  focusWindow(window: TabbedBrowserWindow): void {
+    if (window !== this.focusedWindow) {
+      window.window.focus()
+      this.focusedWindow = window
+    }
+  }
+
   /** Create Initial Window */
-  createInitialWindow(): Promise<TabbedBrowserWindow> {
+  createInitialWindow(): TabbedBrowserWindow {
     return this.createWindow({ url: this.getNewTabURL() })
   }
 
   /** Create Window */
-  async createWindow(details: CreateWindowData): Promise<TabbedBrowserWindow> {
-    const window = new TabbedBrowserWindow(this, details.type === 'action' ? 'action' : 'normal')
+  createWindow(details: CreateWindowData): TabbedBrowserWindow {
+    const window = new TabbedBrowserWindow(this, details.type)
     this.windows.push(window)
 
-    /* Focus Window */
-    if (window.type !== 'action') {
-      this.focusedWindow = window
-    }
+    queueMicrotask(async () => {
+      /* Focus Window */
+      this.focusWindow(window)
 
-    /* Set URL(s) */
-    details.url = details.url || this.getNewTabURL()
+      /* Set URL(s) */
+      details.url = details.url || this.getNewTabURL()
 
-    /* Create Tabs */
-    const urls = Array.isArray(details.url) ? details.url : [details.url || '']
-    const tabs = await Promise.all(urls.map((url) => window.tabs.create({ url })))
+      /* Create Tabs */
+      const urls = Array.isArray(details.url) ? details.url : [details.url || '']
+      const tabs = await Promise.all(urls.map((url) => window.tabs.create({ url })))
 
-    /* Add Tabs to Extensions */
-    if (window.type === 'normal') {
-      tabs.forEach((tab) => this.extensions.addTab(tab, window.window))
-      this.extensions.selectTab(tabs[0])
-    }
+      /* Add Tabs to Extensions */
+      if (window.type === 'normal') {
+        tabs.forEach((tab) => this.extensions.addTab(tab, window.window))
+        this.extensions.selectTab(tabs[0])
+      }
 
-    /* Select First Tab */
-    window.tabs.select(tabs[0])
+      /* Select First Tab */
+      window.tabs.select(tabs[0])
+    })
 
     return window
   }
@@ -229,6 +240,7 @@ class Profile {
     const tab = await window.tabs.create(details)
     this.extensions.addTab(tab, window.window)
     this.extensions.selectTab(tab)
+    this.focusWindow(window)
   }
 
   /** Handle Select Tab */
@@ -237,9 +249,14 @@ class Profile {
     if (window) {
       const tab = window.tabs.getById(id)
       if (tab) {
-        this.focusedWindow = window
+        /* Select tab within extension */
         this.extensions.selectTab(tab)
+
+        /* Select tab within renderer */
         window.tabs.select(tab)
+
+        /* Focus Window */
+        this.focusWindow(window)
       }
     }
   }
@@ -311,6 +328,11 @@ class Profile {
         const window = this.getCurrentWindow()
         const tab = await window.tabs.create(details)
         window.tabs.select(tab)
+
+        queueMicrotask(() => {
+          this.focusWindow(window)
+        })
+
         return [tab, window.window]
       },
 
@@ -343,7 +365,7 @@ class Profile {
       selectTab: (tab) => {
         const window = this.getWindowFromWebContents(tab)
         if (window) {
-          this.focusedWindow = window
+          this.focusWindow(window)
           window.tabs.select(tab)
         }
       },
@@ -380,13 +402,14 @@ class Profile {
     this.sendMessageToHost('remove-window', { id: window.window.id })
 
     if (this.focusedWindow === window && window.type !== 'popup') {
-      this.focusedWindow = this.windows.find((win) => win.type !== 'action') || null
+      const selected = this.windows.find((win) => win.type !== 'action') || null
 
-      if (this.focusedWindow) {
-        const tab = this.focusedWindow.tabs.getAll()[0]
+      if (selected) {
+        const tab = selected.tabs.getAll()[0]
         if (tab) {
+          this.focusWindow(selected)
           this.extensions.selectTab(tab)
-          this.focusedWindow.tabs.select(tab)
+          selected.tabs.select(tab)
         }
       }
     }
