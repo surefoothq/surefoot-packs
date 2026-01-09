@@ -25,8 +25,8 @@ const Profile: Component<ProfileProps> = (props) => {
         ref={context.setContainerRef}
         class={cn(
           'grow flex flex-col shrink-0',
-          'divide-y dark:divide-slate-700',
-          'bg-white dark:bg-slate-800 dark:text-white',
+          'divide-y divide-neutral-800',
+          'bg-neutral-950',
           'relative'
         )}
       >

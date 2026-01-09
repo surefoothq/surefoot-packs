@@ -46,7 +46,7 @@ const ActionPopup: Component = () => {
           'flex flex-col',
           'h-11/12 w-full max-w-sm rounded-t-xl overflow-clip',
           'left-1/2 -translate-x-1/2',
-          'bg-slate-800'
+          'bg-neutral-950'
         )}
       >
         {/* Header */}

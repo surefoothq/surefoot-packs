@@ -1,11 +1,13 @@
-import { Component } from 'solid-js'
-import { WebviewButton } from './WebviewButton'
-import { Dialog } from '@kobalte/core'
-import { TbEdit } from 'solid-icons/tb'
-import { HiOutlineGlobeAlt, HiOutlineXCircle } from 'solid-icons/hi'
 import { BsFullscreen } from 'solid-icons/bs'
-import { useBrowserProfileContext } from '@renderer/hooks/useBrowserProfileContext'
+import { Component } from 'solid-js'
+import { Dialog } from '@kobalte/core'
+import { HiOutlineGlobeAlt, HiOutlineXCircle } from 'solid-icons/hi'
+import { TbEdit } from 'solid-icons/tb'
+import { closeProfile } from '@renderer/store'
 import { cn } from '@renderer/lib/utils'
+import { useBrowserProfileContext } from '@renderer/hooks/useBrowserProfileContext'
+
+import { WebviewButton } from './WebviewButton'
 
 const ProfileHeader: Component = () => {
   const context = useBrowserProfileContext()
@@ -17,7 +19,7 @@ const ProfileHeader: Component = () => {
         <WebviewButton
           title="Toggle Browser"
           onClick={() => context.toggleAside()}
-          class={context.store.showAside ? 'text-blue-500' : ''}
+          class={context.store.showAside ? 'text-blue-400' : ''}
         >
           <HiOutlineGlobeAlt class="size-4" />
         </WebviewButton>
@@ -26,14 +28,14 @@ const ProfileHeader: Component = () => {
         <WebviewButton
           title="Toggle Fullscreen"
           onClick={() => context.toggleFullScreen()}
-          class={context.store.isDesktop ? 'text-blue-500' : ''}
+          class={context.store.isDesktop ? 'text-blue-400' : ''}
         >
           <BsFullscreen class="size-4" />
         </WebviewButton>
       </div>
 
       {/* Name */}
-      <h1 class={cn('text-blue-500 text-sm', 'truncate font-bold text-center')}>
+      <h1 class={cn('text-blue-400 text-sm', 'truncate font-bold text-center')}>
         {context.profile().name}
       </h1>
 
@@ -51,7 +53,7 @@ const ProfileHeader: Component = () => {
         </Dialog.Root>
 
         {/* Close Button */}
-        <WebviewButton title="Close Account">
+        <WebviewButton title="Close Account" onClick={() => closeProfile(context.profile().id)}>
           <HiOutlineXCircle class="size-4" />
         </WebviewButton>
       </div>

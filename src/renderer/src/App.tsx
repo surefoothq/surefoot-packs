@@ -18,7 +18,7 @@ const App: Component = () => {
   return (
     <>
       {/* Application */}
-      <div class="flex h-screen w-screen divide-x dark:divide-slate-700">
+      <div class="flex h-screen w-screen divide-x divide-neutral-800">
         {/* Side Menu */}
         <SideMenu />
 

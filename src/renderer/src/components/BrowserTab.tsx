@@ -33,7 +33,7 @@ const BrowserTab: Component<BrowserTabProps> = (props) => {
   })
 
   return (
-    <div class={cn('grow flex flex-col shrink-0', 'divide-y dark:divide-slate-700')}>
+    <div class={cn('grow flex flex-col shrink-0', 'divide-y divide-neutral-800')}>
       {/* Browser Tab Controls */}
       <Show when={props.tab.windowType === 'normal'}>
         <BrowserTabControls tab={props.tab} getWebview={getWebview} />

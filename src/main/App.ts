@@ -89,11 +89,8 @@ class App {
 
   /** Destroy Profile */
   async destroyProfile(_ev: Electron.IpcMainInvokeEvent, id: string): Promise<void> {
-    // TODO: Optimize destroy profile
-    return
     if (profileMap.has(id)) {
-      profileMap.get(id)?.destroy()
-      profileMap.delete(id)
+      profileMap.get(id)!.destroy()
     }
   }
 

@@ -35,7 +35,7 @@ const BrowserTabButtonList: Component = () => {
       )}
     >
       {/* Main */}
-      <div class="sticky left-0 py-1 px-2 bg-white z-1 dark:bg-slate-800 shrink-0">
+      <div class="sticky left-0 py-1 px-2 bg-neutral-950 z-1 shrink-0">
         <WebviewButton
           onClick={() =>
             context.sendIpc('create-tab', { url: context.store.config.newTabURL || '' })

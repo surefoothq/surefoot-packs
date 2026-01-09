@@ -1,5 +1,6 @@
-import { cn } from '../lib/utils'
 import { Component, JSX } from 'solid-js'
+
+import { cn } from '../lib/utils'
 
 interface ViewContainerProps {
   currentPage: number
@@ -15,7 +16,7 @@ const ViewContainer: Component<ViewContainerProps> = (props) => (
         'h-full grid grid-cols-(--grid-cols) auto-rows-(--auto-rows)',
         '-translate-y-(--current-page)',
         'transition-transform duration-500',
-        'divide-x dark:divide-slate-700'
+        'divide-x divide-neutral-800'
       )}
       style={{
         '--current-page': `${props.currentPage * 100}%`,

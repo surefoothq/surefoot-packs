@@ -180,7 +180,8 @@ class Profile {
     /* Install Chrome Web Store */
     await installChromeWebStore({
       session: this.session,
-      allowUnpackedExtensions: true
+      allowUnpackedExtensions: true,
+      autoUpdate: false
     })
 
     /* Load New Tab Page */
@@ -462,9 +463,11 @@ class Profile {
   /** Destroy Profile */
   destroy(): void {
     console.log(`Destroying profile: ${this.id}`)
-    app.off('web-contents-created', this.configureWebContents)
+    this.getAllTabs().forEach((tab) => this.extensions.removeTab(tab))
     this.windows.forEach((window) => window.destroy())
     this.windows = []
+    this.popup?.destroy()
+    this.popup = null
   }
 }
 

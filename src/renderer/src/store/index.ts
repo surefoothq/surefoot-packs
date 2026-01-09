@@ -34,4 +34,22 @@ const closePage = (pageIndex: number): void => {
   console.log('Close page:', pageIndex)
 }
 
-export { store, setStore, addProfile, setPage, closePage }
+const launchProfile = (id: string): void => {
+  setStore(
+    'profiles',
+    store.profiles.findIndex((profile) => profile.id === id),
+    'active',
+    true
+  )
+}
+
+const closeProfile = (id: string): void => {
+  setStore(
+    'profiles',
+    store.profiles.findIndex((profile) => profile.id === id),
+    'active',
+    false
+  )
+}
+
+export { store, setStore, addProfile, setPage, closePage, launchProfile, closeProfile }

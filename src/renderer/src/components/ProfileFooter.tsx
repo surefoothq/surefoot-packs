@@ -13,7 +13,7 @@ const ProfileFooter: Component = () => {
   return (
     <Show when={context.activeTab()}>
       <div class="shrink-0 flex flex-wrap items-center justify-center p-1 gap-2">
-        <div class="border border-slate-200 dark:border-slate-600 rounded-full p-1 px-2 overflow-auto">
+        <div class="border border-neutral-800 rounded-full p-1 px-2 overflow-auto">
           <BrowserActionList
             partition={context.partition()}
             tab={context.activeTab()?.webContentsId}

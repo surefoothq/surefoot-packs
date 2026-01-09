@@ -1,6 +1,7 @@
-import { HiOutlineXMark } from 'solid-icons/hi'
-import { cn } from '../lib/utils'
 import { Component, For } from 'solid-js'
+import { HiOutlineXMark } from 'solid-icons/hi'
+
+import { cn } from '../lib/utils'
 
 interface PageControlProps {
   pageCount: number
@@ -18,13 +19,10 @@ const PageControl: Component<PageControlProps> = (props) => (
           <button
             class={cn(
               'p-1 w-14 rounded-xl border border-transparent',
+              'bg-neutral-800 cursor-pointer',
               props.currentPage === pageIndex()
-                ? [
-                    'border-blue-500 bg-blue-100 text-blue-500',
-                    'dark:bg-slate-700 dark:text-blue-500',
-                    'font-bold'
-                  ]
-                : 'bg-slate-100 dark:bg-slate-700'
+                ? ['text-blue-400 border-blue-400', 'font-bold']
+                : ''
             )}
             onClick={() => props.setPage(pageIndex())}
           >
@@ -34,10 +32,8 @@ const PageControl: Component<PageControlProps> = (props) => (
           {/* Close Page */}
           <button
             class={cn(
-              'p-2 rounded-xl border border-transparent',
-              'bg-slate-100 dark:bg-slate-700',
-              'hover:bg-blue-100 hover:text-blue-500',
-              'dark:hover:bg-slate-600'
+              'cursor-pointer p-2 bg-neutral-800 rounded-xl border border-transparent',
+              'hover:text-blue-400'
             )}
             onClick={() => props.closePage(pageIndex())}
           >

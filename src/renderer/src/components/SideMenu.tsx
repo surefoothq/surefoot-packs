@@ -1,13 +1,13 @@
+import { Component } from 'solid-js'
 import { Dialog } from '@kobalte/core'
-
-import Icon from '../assets/images/icon.svg'
 import {
   HiOutlineArrowPath,
   HiOutlineArrowsPointingOut,
   HiOutlineBars3,
   HiOutlineCog6Tooth
 } from 'solid-icons/hi'
-import { Component } from 'solid-js'
+
+import Icon from '../assets/images/icon.svg'
 import { ProfileListDialog } from './ProfileListDialog'
 
 /** Toggle FullScreen */
@@ -25,7 +25,7 @@ const SideMenu: Component = () => {
       {/* Account List */}
       <Dialog.Root>
         <Dialog.Trigger title="Accounts" class="p-2 cursor-pointer">
-          <HiOutlineBars3 class="size-5 text-blue-500" />
+          <HiOutlineBars3 class="size-5 text-blue-400" />
         </Dialog.Trigger>
 
         <ProfileListDialog />
@@ -34,13 +34,13 @@ const SideMenu: Component = () => {
       {/* Settings */}
       <Dialog.Root>
         <Dialog.Trigger title="Settings" class="p-2 cursor-pointer">
-          <HiOutlineCog6Tooth class="size-5 text-blue-500" />
+          <HiOutlineCog6Tooth class="size-5 text-blue-400" />
         </Dialog.Trigger>
       </Dialog.Root>
 
       {/* Fullscreen Toggle */}
       <button title="Toggle Fullscreen" class="p-2 cursor-pointer" onClick={toggleFullScreen}>
-        <HiOutlineArrowsPointingOut class="size-5 text-blue-500" />
+        <HiOutlineArrowsPointingOut class="size-5 text-blue-400" />
       </button>
 
       {/* App Icon */}
@@ -56,7 +56,7 @@ const SideMenu: Component = () => {
         class="p-2 cursor-pointer"
         onClick={() => window.location.reload()}
       >
-        <HiOutlineArrowPath class="size-5 text-blue-500" />
+        <HiOutlineArrowPath class="size-5 text-blue-400" />
       </button>
     </div>
   )
