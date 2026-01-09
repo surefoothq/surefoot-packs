@@ -16,12 +16,6 @@ const ActionPopup: Component = () => {
 
   let webview!: Electron.WebviewTag
 
-  onMount(() => {
-    webview.addEventListener('dom-ready', () => {
-      webview.setZoomFactor(0.9)
-    })
-  })
-
   const icon = createMemo(() => {
     const extension = action.extension
     const selected = (extension.manifest['icons'] ?? {})[32]
@@ -35,7 +29,13 @@ const ActionPopup: Component = () => {
 
   const closeAction = (): void => context.sendIpc('close-action-popup')
 
-  console.log(action)
+  onMount(() => {
+    webview.addEventListener('destroyed', closeAction)
+    webview.addEventListener('close', closeAction)
+    webview.addEventListener('dom-ready', () => {
+      webview.setZoomFactor(0.9)
+    })
+  })
 
   return (
     <>

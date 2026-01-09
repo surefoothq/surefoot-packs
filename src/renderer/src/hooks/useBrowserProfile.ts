@@ -107,11 +107,17 @@ const useBrowserProfile = (profile: Accessor<Profile>): BrowserProfileContextTyp
       const tab = store.tabs[index]
 
       if (tab) {
+        /** Debug */
+        console.log('Closing tab', tab)
+
         /** Remove Tab */
         setStore('tabs', (tabs) => tabs.filter((tab) => tab.id !== tabId))
+
         /** If closed tab was active, set another tab as active */
-        if (tab.isActive && store.tabs.length > 1) {
+        if (tab.isActive && store.tabs.length > 0) {
           const selected = store.tabs[index === 0 ? 0 : index - 1]
+          console.log('Setting tab as active:', selected)
+
           sendIpc('select-tab', selected.id)
         }
       }

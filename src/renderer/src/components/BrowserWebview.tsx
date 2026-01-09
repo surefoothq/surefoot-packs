@@ -3,7 +3,7 @@ import {} from 'solid-icons/hi'
 import {} from './Input'
 import {} from './WebviewButton'
 
-import { Component, createEffect, onCleanup, onMount } from 'solid-js'
+import { Component, onMount } from 'solid-js'
 import { Tab } from '@renderer/types'
 import { cn } from '@renderer/lib/utils'
 import { useBrowserProfileContext } from '@renderer/hooks/useBrowserProfileContext'
@@ -70,36 +70,16 @@ const BrowserWebview: Component<BrowserWebviewProps> = (props) => {
 
     /** DOM Ready */
     webview.addEventListener('dom-ready', tabReady)
-  })
-
-  /** Handle Window Close */
-  createEffect(() => {
-    const webview = getWebview()
 
     /** Listen For Close */
     webview.addEventListener('close', closeTab)
-
-    /* Cleanup */
-    onCleanup(() => webview.removeEventListener('close', closeTab))
-  })
-
-  /** Favicon and Title */
-  createEffect(() => {
-    const webview = getWebview()
+    webview.addEventListener('destroyed', closeTab)
 
     /** Update Title */
     webview.addEventListener('page-title-updated', handlePageTitle)
 
     /** Update Icon */
     webview.addEventListener('page-favicon-updated', handleFavicons)
-
-    onCleanup(() => {
-      /** Remove Handler for Update Title */
-      webview.removeEventListener('page-title-updated', handlePageTitle)
-
-      /** Remove Handler for Update Icon */
-      webview.removeEventListener('page-favicon-updated', handleFavicons)
-    })
   })
 
   return (
