@@ -11,6 +11,7 @@ import App from './App'
 import { BrowserActionPopup } from './BrowserActionPopup'
 import type { ProfileConfig, WindowType } from './types'
 import { TabbedBrowserWindow } from './TabbedBrowserWindow'
+import { profileLoadQueue } from './ProfileLoadQueue'
 
 interface CreateWindowData extends Omit<chrome.windows.CreateData, 'type'> {
   type?: WindowType
@@ -156,7 +157,7 @@ class Profile {
   /** Initialize Profile */
   async initialize(): Promise<ProfileConfig> {
     if (!this.readyPromise) {
-      this.readyPromise = this.setup()
+      this.readyPromise = profileLoadQueue.enqueue(() => this.setup())
     }
     return this.readyPromise
   }
