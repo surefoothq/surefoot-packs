@@ -100,10 +100,7 @@ export const BrowserActionList: Component<BrowserActionListProps> = (props) => {
   })
 
   return (
-    <div
-      class="browser-action-list"
-      style={{ display: 'flex', 'flex-direction': 'row', gap: '5px' }}
-    >
+    <div class="flex gap-1">
       <For each={state().actions}>
         {(action) => (
           <BrowserAction
