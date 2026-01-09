@@ -86,11 +86,19 @@ class Profile {
     return window
   }
 
+  /** Get all tabs */
+  getAllTabs(): Electron.WebContents[] {
+    return this.windows.reduce(
+      (acc, current) => acc.concat(current.tabs.getAll()),
+      [] as Electron.WebContents[]
+    )
+  }
+
   /** Configure WebContents */
   configureWebContents(_event: Electron.Event, contents: Electron.WebContents): void {
     if (contents.session === this.session) {
       /* Open dev tools */
-      if (is.dev) {
+      if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
         contents.openDevTools()
       }
 
@@ -397,8 +405,6 @@ class Profile {
   }
 
   async removeWindow(window: TabbedBrowserWindow): Promise<void> {
-    const index = this.windows.findIndex((win) => win === window)
-
     window.tabs.getAll().forEach((tab) => {
       this.extensions.removeTab(tab)
     })
@@ -406,20 +412,6 @@ class Profile {
 
     this.windows = this.windows.filter((win) => win !== window)
     this.sendMessageToHost('remove-window', { id: window.window.id })
-
-    if (this.focusedWindow === window && this.windows.length > 1) {
-      const selected = this.windows[index === 0 ? 0 : index - 1]
-
-      if (selected) {
-        this.focusWindow(selected)
-
-        const tab = selected.tabs.getAll().at(-1)
-        if (tab) {
-          this.extensions.selectTab(tab)
-          selected.tabs.select(tab)
-        }
-      }
-    }
   }
 
   /** Send Message to Host */

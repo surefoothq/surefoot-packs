@@ -107,14 +107,13 @@ const useBrowserProfile = (profile: Accessor<Profile>): BrowserProfileContextTyp
       const tab = store.tabs[index]
 
       if (tab) {
-        /** If closed tab was active, set another tab as active */
-        if (tab.isActive && store.tabs.length > 1) {
-          const newActiveIndex = index === 0 ? 0 : index - 1
-          setStore('tabs', newActiveIndex, 'isActive', true)
-        }
-
         /** Remove Tab */
         setStore('tabs', (tabs) => tabs.filter((tab) => tab.id !== tabId))
+        /** If closed tab was active, set another tab as active */
+        if (tab.isActive && store.tabs.length > 1) {
+          const selected = store.tabs[index === 0 ? 0 : index - 1]
+          sendIpc('select-tab', selected.id)
+        }
       }
     })
   }
@@ -123,6 +122,10 @@ const useBrowserProfile = (profile: Accessor<Profile>): BrowserProfileContextTyp
   const removeWindow = (windowId: number): void => {
     batch(() => {
       setStore('tabs', (tabs) => tabs.filter((tab) => tab.windowId !== windowId))
+      const active = store.tabs.find((tab) => tab.isActive)
+      if (!active && store.tabs.length > 0) {
+        sendIpc('select-tab', store.tabs.at(-1)!.id)
+      }
     })
   }
 
