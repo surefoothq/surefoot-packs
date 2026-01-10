@@ -11,7 +11,7 @@ const ProfileFooter: Component = () => {
   const context = useBrowserProfileContext()
 
   return (
-    <Show when={context.activeTab()}>
+    <Show when={context.activeTab()?.webContentsId}>
       <div class="shrink-0 flex flex-wrap items-center justify-center p-1 gap-2">
         <div class="border border-neutral-800 rounded-full p-1 px-2 overflow-auto">
           <BrowserActionList

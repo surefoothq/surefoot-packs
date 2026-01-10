@@ -16,6 +16,8 @@ interface CreateWindowData extends Omit<chrome.windows.CreateData, 'type'> {
   type?: WindowType
 }
 
+const OPEN_DEV_TOOLS = false
+
 const PATHS = {
   extension: join(__dirname, '../renderer')
 }
@@ -30,7 +32,6 @@ class Profile {
   newTabExtension: Electron.Extension | null = null
   readyPromise: Promise<ProfileConfig> | null = null
   windows: TabbedBrowserWindow[] = []
-  focusedWindow: TabbedBrowserWindow | null = null
 
   /* Constructor */
   constructor({ id, ctx }: { id: string; ctx: App }) {
@@ -53,6 +54,10 @@ class Profile {
     return this.ctx.window!.webContents
   }
 
+  getWindowFromId(id: number): TabbedBrowserWindow | null {
+    return this.windows.find((win) => win.window.id === id) || null
+  }
+
   getWindowFromBaseWindow(baseWindow: Electron.BaseWindow): TabbedBrowserWindow | null {
     return this.windows.find((win) => win.window.id === baseWindow.id) || null
   }
@@ -65,24 +70,20 @@ class Profile {
     return this.windows.find((win) => win.tabs.getById(tabId)) || null
   }
 
-  getFocusedWindow(): TabbedBrowserWindow | null {
-    return this.focusedWindow
-  }
-
   getCurrentWindow(): TabbedBrowserWindow {
-    const focused = this.getFocusedWindow()
-    if (focused) {
-      return focused
-    }
+    let window: TabbedBrowserWindow | null = null
 
-    let window = this.windows[0]
+    const base = this.extensions.getCurrentWindow()
+
+    if (base) {
+      window = this.getWindowFromBaseWindow(base)
+    }
 
     if (!window) {
       window = new TabbedBrowserWindow(this, 'normal')
       this.windows.push(window)
       this.extensions.addWindow(window.window)
     }
-
     return window
   }
 
@@ -98,7 +99,7 @@ class Profile {
   configureWebContents(_event: Electron.Event, contents: Electron.WebContents): void {
     if (contents.session === this.session) {
       /* Open dev tools */
-      if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
+      if (OPEN_DEV_TOOLS && is.dev && process.env['ELECTRON_RENDERER_URL']) {
         contents.openDevTools()
       }
 
@@ -196,38 +197,33 @@ class Profile {
   }
 
   focusWindow(window: TabbedBrowserWindow): void {
-    window.window.focus()
     this.extensions.focusWindow(window.window)
-    this.focusedWindow = window
   }
 
   /** Create Initial Window */
-  createInitialWindow(): TabbedBrowserWindow {
-    return this.createWindow({ url: this.getNewTabURL() })
+  async createInitialWindow(): Promise<TabbedBrowserWindow> {
+    return await this.createWindow({ url: this.getNewTabURL() })
   }
 
   /** Create Window */
-  createWindow(details: CreateWindowData): TabbedBrowserWindow {
+  async createWindow(details: CreateWindowData): Promise<TabbedBrowserWindow> {
     const window = new TabbedBrowserWindow(this, details.type)
     this.windows.push(window)
     this.extensions.addWindow(window.window)
     this.focusWindow(window)
 
-    queueMicrotask(async () => {
-      /* Set URL(s) */
-      details.url = details.url || this.getNewTabURL()
+    /* Set URL(s) */
+    details.url = details.url || this.getNewTabURL()
 
-      /* Create Tabs */
-      const urls = Array.isArray(details.url) ? details.url : [details.url || '']
-      const tabs = await Promise.all(urls.map((url) => window.tabs.create({ url })))
+    /* Create Tabs */
+    const urls = Array.isArray(details.url) ? details.url : [details.url || '']
+    const tabs = await Promise.all(urls.map((url) => window.tabs.create({ url })))
 
-      /* Add Tabs to Extensions */
-      tabs.forEach((tab) => this.extensions.addTab(tab, window.window))
+    /* Add Tabs to Extensions */
+    tabs.forEach((tab) => this.extensions.addTab(tab, window.window))
 
-      /* Select First Tab */
-      this.extensions.selectTab(tabs[0])
-      window.tabs.select(tabs[0])
-    })
+    /* Select First Tab */
+    this.extensions.selectTab(tabs[0])
 
     return window
   }
@@ -246,9 +242,9 @@ class Profile {
   ): Promise<void> {
     const window = this.getCurrentWindow()
     const tab = await window.tabs.create(details)
+    this.focusWindow(window)
     this.extensions.addTab(tab, window.window)
     this.extensions.selectTab(tab)
-    this.focusWindow(window)
   }
 
   /** Handle close action popup */
@@ -265,14 +261,11 @@ class Profile {
     if (window) {
       const tab = window.tabs.getById(id)
       if (tab) {
-        /* Select tab within extension */
-        this.extensions.selectTab(tab)
-
-        /* Select tab within renderer */
-        window.tabs.select(tab)
-
         /* Focus Window */
         this.focusWindow(window)
+
+        /* Select tab within extension */
+        this.extensions.selectTab(tab)
       }
     }
   }
@@ -284,11 +277,6 @@ class Profile {
       const tab = window.tabs.getById(id)
       if (tab) {
         this.extensions.removeTab(tab)
-        window.tabs.remove(tab)
-
-        if (window.tabs.getAll().length === 0) {
-          this.removeWindow(window)
-        }
       }
     }
   }
@@ -340,7 +328,7 @@ class Profile {
 
       /* Create Tab  */
       createTab: async (details) => {
-        const window = this.getCurrentWindow()
+        const window = this.getWindowFromId(details.windowId!)!
         const tab = await window.tabs.create(details)
         window.tabs.select(tab)
         this.focusWindow(window)
@@ -360,7 +348,7 @@ class Profile {
         if (window) {
           window.tabs.remove(tab)
           if (window.tabs.getAll().length === 0) {
-            this.removeWindow(window)
+            window.destroy()
           }
         }
       },
@@ -369,7 +357,8 @@ class Profile {
       removeWindow: (baseWindow) => {
         const window = this.getWindowFromBaseWindow(baseWindow)
         if (window) {
-          this.removeWindow(window)
+          this.windows = this.windows.filter((win) => win !== window)
+          this.sendMessageToHost('remove-window', { id: window.window.id })
         }
       },
 
@@ -403,16 +392,6 @@ class Profile {
         this.popup = null
       }
     })
-  }
-
-  async removeWindow(window: TabbedBrowserWindow): Promise<void> {
-    window.tabs.getAll().forEach((tab) => {
-      this.extensions.removeTab(tab)
-    })
-    window.destroy()
-
-    this.windows = this.windows.filter((win) => win !== window)
-    this.sendMessageToHost('remove-window', { id: window.window.id })
   }
 
   /** Send Message to Host */

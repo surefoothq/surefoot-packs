@@ -3,7 +3,7 @@ import {} from '@kobalte/core'
 import {} from './BrowserWebview'
 
 import { Component, createMemo, onMount } from 'solid-js'
-import { HiSolidXMark } from 'solid-icons/hi'
+import { HiSolidArrowTopRightOnSquare, HiSolidXMark } from 'solid-icons/hi'
 import { cn } from '@renderer/lib/utils'
 import { useBrowserProfileContext } from '@renderer/hooks/useBrowserProfileContext'
 
@@ -28,6 +28,10 @@ const ActionPopup: Component = () => {
   })
 
   const closeAction = (): void => context.sendIpc('close-action-popup')
+  const openUrl = (): void => {
+    context.sendIpc('create-tab', { url: action.url })
+    closeAction()
+  }
 
   onMount(() => {
     webview.addEventListener('destroyed', closeAction)
@@ -53,6 +57,9 @@ const ActionPopup: Component = () => {
         <div class="shrink-0 p-2 flex items-center gap-2">
           <img src={icon() || BrowserIcon} alt="icon" class="size-6 shrink-0 rounded-full" />
           <h3 class="font-bold grow min-w-0 truncate text-center">{action.extension.name}</h3>
+          <WebviewButton onClick={openUrl} class="size-8 p-0 shrink-0">
+            <HiSolidArrowTopRightOnSquare />
+          </WebviewButton>
           <WebviewButton onClick={closeAction} class="size-8 p-0 shrink-0">
             <HiSolidXMark />
           </WebviewButton>
