@@ -1,4 +1,5 @@
 import { Component, For, createEffect, createSignal, onCleanup, onMount } from 'solid-js'
+import { createStore, reconcile } from 'solid-js/store'
 
 import BrowserAction from './BrowserAction'
 
@@ -29,13 +30,16 @@ const getBrowserAction = (): BrowserActionAPI | undefined => {
 }
 
 export const BrowserActionList: Component<BrowserActionListProps> = (props) => {
-  const [state, setState] = createSignal<ActionState>({ actions: [] })
+  const [store, setStore] = createStore<ActionState>({
+    actions: []
+  })
+
   const [observing, setObserving] = createSignal(false)
 
   const partition = (): string => props.partition || DEFAULT_PARTITION
   const tabId = (): number => {
     const tab = props.tab
-    return typeof tab === 'number' && tab >= 0 ? tab : state().activeTabId || -1
+    return typeof tab === 'number' && tab >= 0 ? tab : store.activeTabId || -1
   }
 
   const fetchState = async (): Promise<void> => {
@@ -44,7 +48,7 @@ export const BrowserActionList: Component<BrowserActionListProps> = (props) => {
       if (!browserAction) return
 
       const newState = await browserAction.getState(partition())
-      setState(newState)
+      updateState(newState)
     } catch (error) {
       console.error(
         `browser-action-list failed to update [tab: ${props.tab}, partition: '${props.partition}']`,
@@ -53,8 +57,13 @@ export const BrowserActionList: Component<BrowserActionListProps> = (props) => {
     }
   }
 
+  const updateState = (newState: ActionState): void => {
+    setStore(reconcile(newState))
+  }
+
   const handleUpdate = (newState: ActionState): void => {
-    setState(newState)
+    console.log('Actions updated:', newState)
+    updateState(newState)
   }
 
   const startObserving = (): void => {
@@ -101,7 +110,7 @@ export const BrowserActionList: Component<BrowserActionListProps> = (props) => {
 
   return (
     <div class="flex gap-1">
-      <For each={state().actions}>
+      <For each={store.actions}>
         {(action) => (
           <BrowserAction
             id={action.id}
