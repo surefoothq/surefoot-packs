@@ -1,9 +1,7 @@
-import isUrl from 'is-url'
 import normalizeUrl from 'normalize-url'
 import { Component, onMount } from 'solid-js'
-
 import Icon from './assets/images/icon.svg'
-import { cn } from './lib/utils'
+import { checkUrl, cn } from './lib/utils'
 
 /** New Tab Component */
 const NewTab: Component = () => {
@@ -13,7 +11,7 @@ const NewTab: Component = () => {
     const formData = new FormData(form)
     const query = formData.get('search')?.toString().trim()
     const url = normalizeUrl(query || '')
-    const finalUrl = isUrl(url)
+    const finalUrl = checkUrl(url)
       ? url
       : `https://www.google.com/search?q=${encodeURIComponent(query || '')}`
 

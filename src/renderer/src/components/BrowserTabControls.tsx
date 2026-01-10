@@ -1,6 +1,4 @@
 import {} from '@renderer/hooks/useBrowserProfileContext'
-
-import isUrl from 'is-url'
 import normalizeUrl from 'normalize-url'
 import { Component } from 'solid-js'
 import { HiOutlineArrowLeft, HiOutlineArrowRight } from 'solid-icons/hi'
@@ -8,9 +6,9 @@ import { HiOutlineArrowPath, HiOutlineXMark } from 'solid-icons/hi'
 import { Tab } from '@renderer/types'
 import { onMount } from 'solid-js'
 import { useWebviewControls } from '@renderer/hooks/useWebviewControls'
-
 import { Input } from './Input'
 import { WebviewButton } from './WebviewButton'
+import { checkUrl } from '@renderer/lib/utils'
 
 interface BrowserTabControlsProps {
   tab: Tab
@@ -44,7 +42,7 @@ const BrowserTabControls: Component<BrowserTabControlsProps> = (props) => {
 
     callWebviewMethod((webview) => {
       webview.loadURL(
-        isUrl(url) ? url : `https://www.google.com/search?q=${encodeURIComponent(input)}`
+        checkUrl(url) ? url : `https://www.google.com/search?q=${encodeURIComponent(input)}`
       )
     })
   }
