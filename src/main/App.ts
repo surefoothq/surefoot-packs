@@ -4,9 +4,13 @@ import { join } from 'path'
 import { nativeTheme } from 'electron/main'
 
 import icon from '../../resources/icon.png?asset'
+import { Browser, BrowserKey, BrowserProfile, ProfileExtension } from '../types'
+import { Launcher } from './Launcher'
 
 class App {
   window!: Electron.BrowserWindow
+  launcher = new Launcher()
+
   constructor() {
     // Configure theme
     nativeTheme.themeSource = 'dark'
@@ -22,10 +26,12 @@ class App {
       height: 670,
       show: false,
       autoHideMenuBar: true,
+      resizable: false,
       ...(process.platform === 'linux' ? { icon } : {}),
       webPreferences: {
         preload: join(__dirname, '../preload/index.js'),
-        sandbox: false
+        sandbox: false,
+        webSecurity: false
       }
     })
 
@@ -49,6 +55,10 @@ class App {
 
   registerIpcHandlers(): void {
     ipcMain.on('ping', () => console.log('pong'))
+    ipcMain.handle('get-browsers', this.getBrowsers)
+    ipcMain.handle('get-profiles', this.getProfiles)
+    ipcMain.handle('get-extensions', this.getExtensions)
+    ipcMain.handle('launch-profile', this.launchProfile)
   }
 
   initialize(): void {
@@ -91,6 +101,19 @@ class App {
     // In this file you can include the rest of your app's specific main process
     // code. You can also put them in separate files and require them here.
   }
+
+  getBrowsers = (): Record<BrowserKey, Browser> => this.launcher.getBrowsers()
+  getProfiles = (_event: Electron.IpcMainInvokeEvent, browser: BrowserKey): BrowserProfile[] =>
+    this.launcher.getProfiles(browser)
+
+  getExtensions = (_event: Electron.IpcMainInvokeEvent, profileDir: string): ProfileExtension[] =>
+    this.launcher.getProfileExtensions(profileDir)
+
+  launchProfile = (
+    _event: Electron.IpcMainInvokeEvent,
+    browser: BrowserKey,
+    profileDir: string
+  ): void => this.launcher.launchProfile(browser, profileDir)
 }
 
 export { App }
