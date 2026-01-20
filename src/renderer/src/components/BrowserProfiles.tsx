@@ -103,7 +103,7 @@ const BrowserProfiles = (): React.JSX.Element => {
                   <div className="flex flex-col px-2 w-full">
                     <span className="font-bold truncate">{profile['name']}</span>
                     {profile['gaia_name'] ? (
-                      <span className="truncate">{profile['gaia_name']}</span>
+                      <span className="truncate text-neutral-300">{profile['gaia_name']}</span>
                     ) : null}
                     {profile['user_name'] ? (
                       <span className="truncate text-neutral-400">{profile['user_name']}</span>
