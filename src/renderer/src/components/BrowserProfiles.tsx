@@ -6,6 +6,7 @@ import { useAppContext } from '@renderer/hooks/useAppContext'
 import { useProfilesQuery } from '@renderer/hooks/useProfilesQuery'
 
 import { ProfileAvatar } from './ProfileAvatar'
+import { SearchInput } from './SearchInput'
 
 const BrowserProfiles = (): React.JSX.Element => {
   const app = useAppContext()
@@ -61,10 +62,8 @@ const BrowserProfiles = (): React.JSX.Element => {
         <h1 className="grow min-w-0 font-boldonse text-xl text-center">{browser.name}</h1>
 
         {/* Search */}
-        <input
-          type="search"
-          className={cn('p-4 bg-neutral-800 rounded-full', 'w-full max-w-md mx-auto')}
-          placeholder="Search profile"
+        <SearchInput
+          placeholder="Search profiles..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
