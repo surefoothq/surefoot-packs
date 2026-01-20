@@ -1,7 +1,8 @@
-import { resolve } from 'path'
-import { defineConfig } from 'electron-vite'
 import react from '@vitejs/plugin-react'
-
+import tailwindcss from '@tailwindcss/vite'
+import { defineConfig } from 'electron-vite'
+import { imagetools } from 'vite-imagetools'
+import { resolve } from 'path'
 export default defineConfig({
   main: {},
   preload: {},
@@ -11,6 +12,6 @@ export default defineConfig({
         '@renderer': resolve('src/renderer/src')
       }
     },
-    plugins: [react()]
+    plugins: [react(), tailwindcss(), imagetools()]
   }
 })
