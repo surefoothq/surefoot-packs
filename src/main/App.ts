@@ -1,12 +1,17 @@
 import { BrowserWindow, app, ipcMain, shell } from 'electron'
 import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 import { join } from 'path'
+import { nativeTheme } from 'electron/main'
 
 import icon from '../../resources/icon.png?asset'
 
 class App {
   window!: Electron.BrowserWindow
   constructor() {
+    // Configure theme
+    nativeTheme.themeSource = 'dark'
+
+    // Initialize
     this.initialize()
   }
 
