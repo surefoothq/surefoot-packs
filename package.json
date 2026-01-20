@@ -31,7 +31,8 @@
     "copy-to-clipboard": "^3.3.3",
     "react-icons": "^5.5.0",
     "tailwind-merge": "^3.4.0",
-    "tailwindcss": "^4.1.18"
+    "tailwindcss": "^4.1.18",
+    "vite-imagetools": "^9.0.2"
   },
   "devDependencies": {
     "@electron-toolkit/eslint-config-prettier": "^3.0.0",
@@ -58,7 +59,8 @@
     "onlyBuiltDependencies": [
       "electron",
       "electron-winstaller",
-      "esbuild"
+      "esbuild",
+      "sharp"
     ]
   }
 }
