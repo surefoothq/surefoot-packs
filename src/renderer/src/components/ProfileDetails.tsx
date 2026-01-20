@@ -99,7 +99,7 @@ const ProfileDetails = (): React.JSX.Element => {
         <div className="flex flex-col gap-2 w-full max-w-md mx-auto">
           {filteredExtensions.length > 0 ? (
             filteredExtensions.map((item) => (
-              <button
+              <div
                 key={item.id}
                 className={cn(
                   'flex p-2 gap-2 rounded-2xl text-left cursor-pointer',
@@ -112,9 +112,10 @@ const ProfileDetails = (): React.JSX.Element => {
                 />
                 <div className="grow min-w-0 flex flex-col">
                   <div className="font-bold truncate">{item.name}</div>
-                  <p className="text-neutral-400 truncate">{item.description}</p>
+                  <p className="text-neutral-300 truncate">{item.description}</p>
+                  <p className="text-neutral-400 truncate text-xs">ID: {item.id}</p>
                 </div>
-              </button>
+              </div>
             ))
           ) : (
             <p className="text-center">No extension to display!</p>
